@@ -36,21 +36,24 @@ object PlaceholderContent {
     }
 
     private fun createPlaceholderItem(position: Int): Competitor {
-        return Competitor(position.toString(), "1", "John Dow", 1, 18, 0 )
+        return Competitor(position.toString(), "1", "John Dow")
     }
 
 
     /**
      * A placeholder item representing a piece of content.
      */
-    data class Competitor(val id: String, var bib_number : String, var name: String, var sex: Int, var age : Int, var group : Int) {
-        fun copy(other : Competitor) {
-            bib_number = other.bib_number
-            name = other.name
-            sex = other.sex
-            age = other.age
-            group = other.group
-        }
+    data class Competitor(val id: String,
+                          var bib_number : String,
+                          var name: String,
+                          var sex: Int = 1,
+                          var age : Int = 18,
+                          var group : Int = 0,
+                          var started : Boolean = false,
+                          var finished : Boolean = false,
+                          var startTime : Long = 0L,
+                          val splits : MutableList<Long> = mutableListOf()) {
+
         override fun toString(): String = name
     }
 }
