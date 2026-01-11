@@ -110,6 +110,7 @@ fun CompetitorContent(item : Competitor, onItemChanged : (Competitor)-> Unit,  h
             modifier = (if (horizontal) Modifier.width(75.dp) else Modifier.fillMaxWidth()),
             label = { if (!horizontal) Text("Bib number") else null }
         )
+
         Text(item.group.toString())
 
         Row(

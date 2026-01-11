@@ -8,9 +8,11 @@ data class Competitor(val id: String,
                       var sex: Int = 1,
                       var age : Int = 18,
                       var group : Int = 0,
+                      val bib_color : Int = 0,
                       var started : Boolean = false,
                       var finished : Boolean = false,
                       var startTime : Long = 0L,
+                      var result : Int = Int.MAX_VALUE,
                       val splits : MutableList<Long> = mutableListOf()) {
 
     override fun toString(): String = "$bib_number: $name"

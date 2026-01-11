@@ -23,7 +23,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setTitle("Participants")
 
-        val viewModel = CompetitorViewModel()
+        this.application
+        val viewModel = CompetitorViewModel(this.application)
 
 
 
@@ -44,7 +45,7 @@ class MainActivity : ComponentActivity() {
                                 Modifier.padding(paddingValues),
                                 { navController.navigate("AddCompetitor") },
                                 {
-                                    viewModel.arrangeStartTimes()
+                                    if(viewModel.timeTrialStarted.value) viewModel.arrangeStartTimes() // Only for late-registered competitors, normally on start button
                                     navController.navigate("TimeTrial")
                                 })
                         }
@@ -68,7 +69,15 @@ class MainActivity : ComponentActivity() {
                                 viewModel,
                                 Modifier.padding(paddingValues),
                                 { navController.navigate("Competitors") },
-                                { navController.navigate("TimeTrial") })
+                                { navController.navigate("TimeTrial") },
+                                { navController.navigate("Results") })
+                        }
+                        composable("Results") {
+                            ResultScreen (
+                                viewModel,
+                                Modifier.padding(paddingValues),
+                                { navController.navigate("SplitScreen") },
+                               )
                         }
                     }
                 }

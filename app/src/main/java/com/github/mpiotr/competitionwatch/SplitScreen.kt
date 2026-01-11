@@ -30,7 +30,8 @@ import kotlinx.coroutines.delay
 @Composable
 fun SplitScreen(viewModel: CompetitorViewModel, modifier: Modifier,
                 onNavigateToList : () -> Unit,
-                onNavigateToStart: ()-> Unit)
+                onNavigateToStart: ()-> Unit,
+                onNavigateToResults: ()-> Unit)
 {
     var nowms by remember { mutableLongStateOf(0L) }
     LaunchedEffect(nowms ) {
@@ -52,10 +53,13 @@ fun SplitScreen(viewModel: CompetitorViewModel, modifier: Modifier,
             Row(horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()) {
                 Button({ onNavigateToStart() }, modifier) {
-                    Text("Go to Start")
+                    Text("Start")
                 }
                 Button({ onNavigateToList() }, modifier) {
-                    Text("Go to Participant List")
+                    Text("Participant List")
+                }
+                Button({ onNavigateToResults() }, modifier) {
+                    Text("Results")
                 }
             }
         }

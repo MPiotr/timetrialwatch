@@ -20,6 +20,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -112,12 +113,14 @@ import kotlinx.coroutines.delay
     val comp_start_time by viewModel.startTime.collectAsState()
     var nowms by remember { mutableLongStateOf(0L) }
     var splittime by remember { mutableLongStateOf(0L) }
+    var isFinishing by remember { mutableStateOf(false) }
     var number = remember { mutableIntStateOf(0)}
     LaunchedEffect(nowms, comp_start_time) {
         val now = SystemClock.elapsedRealtime()
         nowms = now
         delay(200)
     }
+    isFinishing = false
     if(splittime != 0L && nowms - splittime > 1000) {
         splittime = 0
         number.intValue = 0;
@@ -139,17 +142,23 @@ import kotlinx.coroutines.delay
 
         Column()
         {
-            val valid_bib = viewModel.bibIndex.contains(number.value.toString())
+            var valid_bib = viewModel.bibIndex.contains(number.value.toString())
 
             if (valid_bib) {
                 val item_ind = viewModel.bibIndex[number.value.toString()]
                 val item: Competitor =
                     viewModel.competitorsStateFlow.collectAsState().value[item_ind!!]
-                if(item.started) {
+                if(item.finished) valid_bib = false
+                if(item.started && !item.finished) {
                     var splitIndex: Int
                     var racePosition: CompetitorViewModel.RacePositionItems
                     if (splittime == 0L) {
                         splitIndex = item.splits.size
+                        if(splitIndex == viewModel.settings.value.max_num_of_splits - 1) {
+                            isFinishing = true
+                        }
+                        else false
+
                         racePosition = viewModel.racePositionLive(nowms, item_ind, splitIndex)
                     } else {
                         splitIndex = item.splits.size - 1
@@ -181,7 +190,7 @@ import kotlinx.coroutines.delay
                     .width(180.dp)
                     .align(Alignment.CenterHorizontally)
             )
-            { Text("Split") }
+            { if(!isFinishing) Text("Split") else Text("Finish") }
         }
 
     }
