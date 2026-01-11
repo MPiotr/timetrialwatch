@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
 
-import com.github.mpiotr.competitionwatch.placeholder.PlaceholderContent.Competitor
+import com.github.mpiotr.competitionwatch.Competitor
 import com.github.mpiotr.competitionwatch.databinding.FragmentParticipantsBinding
 
 /**

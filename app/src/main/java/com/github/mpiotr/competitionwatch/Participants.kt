@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.github.mpiotr.competitionwatch.placeholder.PlaceholderContent
+
 
 /**
  * A fragment representing a list of Items.
@@ -36,7 +36,7 @@ class Participants : Fragment() {
                     columnCount <= 1 -> LinearLayoutManager(context)
                     else -> GridLayoutManager(context, columnCount)
                 }
-                adapter = MyItemRecyclerViewAdapter(PlaceholderContent.ITEMS)
+                    //adapter = MyItemRecyclerViewAdapter(PlaceholderContent.ITEMS)
             }
         }
         return view
