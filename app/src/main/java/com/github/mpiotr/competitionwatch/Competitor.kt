@@ -13,7 +13,7 @@ data class Competitor(val id: String,
                       var startTime : Long = 0L,
                       val splits : MutableList<Long> = mutableListOf()) {
 
-    override fun toString(): String = name
+    override fun toString(): String = "$bib_number: $name"
 
 
     fun formattedStartRaceTime(comp_start_time : Long) : String{

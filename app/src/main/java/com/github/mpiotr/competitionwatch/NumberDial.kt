@@ -6,15 +6,19 @@ import android.view.View
 import android.widget.Button
 import android.widget.NumberPicker
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.viewinterop.AndroidView
 
 @Composable
-fun NumberDial(onNumberChanged : ( Int)->Unit)
+fun NumberDial(onNumberChanged : ( Int)->Unit, init_number : Int)
 {
-    val number = remember { mutableIntStateOf(0) }
+    val number = remember { mutableIntStateOf(init_number) }
+    LaunchedEffect(init_number) {
+        number.intValue = init_number
+    }
     AndroidView({ context ->
         val view = LayoutInflater.from(context).inflate(R.layout.number_dial, null)
 

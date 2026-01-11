@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.lang.Math.pow
 import java.math.BigInteger
+import kotlin.collections.emptyList
+import kotlin.collections.mapIndexed
 import kotlin.collections.sortedWith
 import kotlin.math.log10
 import kotlin.math.max
@@ -26,17 +28,26 @@ import kotlin.time.Duration.Companion.milliseconds
 class CompetitorViewModel : ViewModel() {
     data class DigitsForPicker(val maxBibNumber : Int, val numDigits : Int, val maxGreaterDigit : Int)
     data class RacePositionInd(val currentPosition : Int, val leaderInd : Int, val chaserInd : Int, val numCompleted : Int)
+    {
+        override fun toString() : String
+        {
+            return "current: $currentPosition, leader $leaderInd; chaser $chaserInd; numCompleted $numCompleted"
+        }
+    }
     data class RacePositionItems(val currentPosition : Int, val leader : Competitor?, val chaser : Competitor?, val numCompleted : Int)
+    {
+        override fun toString() : String
+        {
+            return "current: $currentPosition, leader: $leader, chaser $chaser, numCompleted $numCompleted"
+        }
+    }
 
 
     var competitors  = listOf(
-        Competitor("1", "1", "John Dow",  1, 18, 0 ),
-        Competitor("2", "2", "Dow Jones", 1, 19, 0 ),
-        Competitor("3", "3", "Rocky Balboa", 1, 19, 0 ),
-        Competitor("4", "5", "Conan the Barbarian" ) ,
-        Competitor("5", "7", "Scorpion" ),
-        Competitor("6", "9", "Shang Tsung" ),
-        Competitor("7", "10", "Vasya Pupkin" )
+        Competitor("1", "1", "Andrew Anderson",  1, 18, 0 ),
+        Competitor("2", "2", "Bob Brown", 1, 19, 0 ),
+        Competitor("3", "3", "Cute Candid", 1, 19, 0 ),
+        Competitor("4", "4", "Donald the Dumb" )
     )
 
     var bibIndex : MutableMap<String, Int> = mutableMapOf()
@@ -135,44 +146,84 @@ class CompetitorViewModel : ViewModel() {
     fun onSplit(splitTime : Long, itemIndex : Int)
     {
         _competitorsStateFlow.value[itemIndex].splits.add(splitTime)
+        Log.d("SPLITS", "new split time for $itemIndex: ${splitTime}")
     }
 
-    fun splitsSlice(splitIndex : Int) : List<Pair<Long, Int>?> {
-         return competitorsStateFlow.value.mapIndexed { index, item ->
-             if(item.splits.size > splitIndex)
-                  Pair(item.splits[splitIndex] - item.startTime, index)
-             else
-                 null
-         }
+    fun splitsSlice(splitIndex : Int) : StateFlow<List<Pair<Long, Int>?>> {
+        return _competitorsStateFlow.map{ competitors ->
+            competitors.mapIndexed { index, item ->
+                if(item.splits.size > splitIndex)
+                    Pair(item.splits[splitIndex] - item.startTime, index)
+                else
+                    null
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList<Pair<Long, Int>?>()
+        )
     }
 
-    fun racePositionIndxs(itemIndex : Int, splitIndex : Int) : RacePositionInd {
+    fun racePositionCompleted(itemIndex : Int, splitIndex : Int) : RacePositionItems {
         val splits = competitorsStateFlow.value[itemIndex].splits
-        if( splitIndex >= splits.size)  return RacePositionInd(-1, -1, -1, -1)
+        val start_time =  competitorsStateFlow.value[itemIndex].startTime
+        if( splitIndex > splits.size)  {
 
-        val allSplits = splitsSlice(splitIndex).mapNotNull { item -> item }.sortedBy { it.first }
-        if(allSplits.size == 1) return RacePositionInd(1, -1, -1, 1)
-        var position  = 0
-
-        var chaseInd = -1;
-        for(i in 0..<allSplits.size) {
-            position++
-            if(allSplits[i].second == itemIndex) break
+            return RacePositionItems(-1, null, null, -1)
         }
-        return RacePositionInd(position,
-            if(position > 1) allSplits[position-2].second else -1,
-            if(position < allSplits.size) allSplits[position].second else -1,
-            allSplits.size)
+
+        val allSplits =
+            competitorsStateFlow.value.mapIndexed {
+                    index, item ->
+                if(item.splits.size > splitIndex)
+                    Pair((item.splits[splitIndex] - item.startTime), index)
+                else
+                    null}.mapNotNull {
+                    item -> item }.sortedBy { it.first }
+
+        var position  = 0
+        for(i in 0..<allSplits.size) {
+            if(allSplits[i].second == itemIndex ) break
+            position++
+        }
+
+        val leader = if(position > 0) competitorsStateFlow.value[allSplits[position-1].second] else null
+        val chaser = if(position +1 < allSplits.size) competitorsStateFlow.value[allSplits[position+1].second] else null
+
+        return RacePositionItems(position+1,leader,chaser,allSplits.size)
     }
 
-    fun racePositionInfo(itemIndex : Int, splitIndex : Int) : RacePositionItems {
-        val indxs = racePositionIndxs(itemIndex, splitIndex)
+    fun racePositionLive(msnow : Long, itemIndex : Int, splitIndex : Int) : RacePositionItems {
+        val splits = competitorsStateFlow.value[itemIndex].splits
+        val start_time =  competitorsStateFlow.value[itemIndex].startTime
+        if( splitIndex > splits.size)  {
 
-        return RacePositionItems(indxs.currentPosition,
-                       if(indxs.leaderInd != -1) competitorsStateFlow.value[indxs.leaderInd] else null,
-                       if(indxs.chaserInd != -1) competitorsStateFlow.value[indxs.chaserInd] else null,
-                                indxs.numCompleted)
+            return RacePositionItems(-1, null, null, -1)
+        }
+
+
+
+        val allSplits =
+            competitorsStateFlow.value.mapIndexed {
+                    index, item ->
+                if(item.splits.size > splitIndex)
+                    Pair((item.splits[splitIndex] - item.startTime), index)
+                else
+                    null}.mapNotNull {
+                    item -> item }.sortedBy { it.first }
+
+        var position  = 0
+        for(i in 0..<allSplits.size) {
+            if(allSplits[i].first > msnow - start_time) break
+            position++
+        }
+
+        val leader = if(position > 0) competitorsStateFlow.value[allSplits[position-1].second] else null
+        val chaser = if(position  >= 0 && position < allSplits.size) competitorsStateFlow.value[allSplits[position].second] else null
+
+        return RacePositionItems(position+1,leader,chaser,allSplits.size)
     }
+
 
     fun onTimeTrialStarted(startTime : Long) {
         if(!_timeTrialStarted.value) {

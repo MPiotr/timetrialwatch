@@ -54,7 +54,9 @@ fun CompetitorsItem(item : Competitor, onItemChanged : (Competitor)-> Unit, modi
     }
     else {
         Column(
-            modifier.fillMaxWidth().padding(10.dp),
+            modifier
+                .fillMaxWidth()
+                .padding(10.dp),
             content = { CompetitorContent(item, onItemChanged,  horizontal) }
         )
 
@@ -76,85 +78,99 @@ fun CompetitorContent(item : Competitor, onItemChanged : (Competitor)-> Unit,  h
     LaunchedEffect(item.age) {   if (age != item.age) age = item.age}
     LaunchedEffect(item.sex) {   if (sex != item.sex) sex = item.sex}
 
-    Text(item.id)
+    //Row(Modifier.fillMaxWidth())
+    //{
+        Text(item.id)
 
-    TextField(name,
-        {
-                text ->
-            name = text
-        },
-        enabled = !item.started,
-        modifier = (if(horizontal) Modifier.wrapContentSize() else  Modifier.fillMaxWidth())
-            .onFocusChanged({focusState ->
-            if(!focusState.isFocused && !item.started) { onItemChanged(item.copy(name=name)) }
-                                            } ),
-        label = {if(!horizontal) Text("Name") else null}
+        TextField(
+            name,
+            { text ->
+                name = text
+            },
+            enabled = !item.started,
+            modifier = (if (horizontal) Modifier.wrapContentSize() else Modifier.fillMaxWidth())
+                .onFocusChanged({ focusState ->
+                    if (!focusState.isFocused && !item.started) {
+                        onItemChanged(item.copy(name = name))
+                    }
+                }),
+            label = { if (!horizontal) Text("Name") else null }
 
-             )
-    TextField(bib_number,
-        { num ->
-            bib_number = num
-            onItemChanged(
-                item.copy(bib_number = num)
-            )
-        },
-        enabled = !item.started,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        modifier = (if(horizontal) Modifier.width(75.dp) else Modifier.fillMaxWidth()),
-        label = {if(!horizontal) Text("Bib number") else null}
-    )
-    Text(item.group.toString())
-
-    Row(verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.End, modifier=Modifier.background(Color.LightGray, shape = RectangleShape))
-    {
-        Text(if (item.sex == 1) "Man" else "Woman",
-            fontSize = 12.sp,
         )
-        Box(Modifier.wrapContentSize()) {
-                IconButton(onClick = { expanded = !expanded }, enabled = !item.started,)
+        TextField(
+            bib_number,
+            { num ->
+                bib_number = num
+                onItemChanged(
+                    item.copy(bib_number = num)
+                )
+            },
+            enabled = !item.started,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = (if (horizontal) Modifier.width(75.dp) else Modifier.fillMaxWidth()),
+            label = { if (!horizontal) Text("Bib number") else null }
+        )
+        Text(item.group.toString())
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End,
+            modifier = Modifier.background(Color.LightGray, shape = RectangleShape)
+        )
+        {
+            Text(
+                if (item.sex == 1) "Man" else "Woman",
+                fontSize = 12.sp,
+            )
+            Box(Modifier.wrapContentSize()) {
+                IconButton(onClick = { expanded = !expanded }, enabled = !item.started)
                 {
                     Icon(Icons.Default.ArrowDropDown, contentDescription = "", Modifier.size(24.dp))
                 }
-            DropdownMenu(expanded = expanded, { expanded = false }) {
-                DropdownMenuItem(
-                    { Text("Man", fontSize = 10.sp) },
-                    {
-                        expanded = false;
-                        sex = 1
-                        onItemChanged(
-                            item.copy(sex = 1)
-                        );
-                    }
-                )
-                DropdownMenuItem(
-                    { Text("Woman", fontSize = 10.sp) }, {
-                        expanded = false
-                        sex = 0
-                        onItemChanged(
-                            item.copy(sex = 0)
-                        )
-                    }
-                )
+                DropdownMenu(expanded = expanded, { expanded = false }) {
+                    DropdownMenuItem(
+                        { Text("Man", fontSize = 10.sp) },
+                        {
+                            expanded = false;
+                            sex = 1
+                            onItemChanged(
+                                item.copy(sex = 1)
+                            );
+                        }
+                    )
+                    DropdownMenuItem(
+                        { Text("Woman", fontSize = 10.sp) }, {
+                            expanded = false
+                            sex = 0
+                            onItemChanged(
+                                item.copy(sex = 0)
+                            )
+                        }
+                    )
+                }
             }
         }
-    }
 
-    TextField(team,
-        {updated -> team = updated},
-        enabled = !item.started,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        modifier = if(horizontal) Modifier.wrapContentSize() else Modifier.fillMaxWidth(),
-        label = {if(!horizontal) Text("Team") else null}
-    )
+        TextField(
+            team,
+            { updated -> team = updated },
+            enabled = !item.started,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = if (horizontal) Modifier.wrapContentSize() else Modifier.fillMaxWidth(),
+            label = { if (!horizontal) Text("Team") else null }
+        )
 
-    if(item.started)
-    {
-        Text(item.formattedStartRaceTime(comp_start_time), modifier = Modifier.wrapContentWidth(), fontSize = 12.sp)
-        for(s in item.formattedSplitsRaceTime()) {
-            Text(s, modifier = Modifier.wrapContentWidth(), fontSize = 12.sp)
+        if (item.started) {
+            Text(
+                item.formattedStartRaceTime(comp_start_time),
+                modifier = Modifier.wrapContentWidth(),
+                fontSize = 12.sp
+            )
+            for (s in item.formattedSplitsRaceTime()) {
+                Text(s, modifier = Modifier.wrapContentWidth(), fontSize = 12.sp)
+            }
         }
-    }
+    //}
 
 }
 
