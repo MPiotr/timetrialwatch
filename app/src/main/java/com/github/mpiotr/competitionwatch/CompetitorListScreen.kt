@@ -1,5 +1,6 @@
 package com.github.mpiotr.competitionwatch
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -10,22 +11,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.github.mpiotr.competitionwatch.Competitor
 
 @Composable
 
@@ -38,11 +41,11 @@ import com.github.mpiotr.competitionwatch.Competitor
 
     Scaffold(modifier = modifier.fillMaxSize(),
         topBar = {
-            Row(Modifier.height(64.dp).background(Color.Blue).fillMaxWidth(),
+            Row(Modifier.height(64.dp)//.background(Color.Blue)
+                .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically) {
                 Text("List of Participants",
                     fontSize = 24.sp,
-                    color = Color.White,
                     modifier = Modifier.padding(start = 16.dp))
             }
         },
@@ -52,11 +55,11 @@ import com.github.mpiotr.competitionwatch.Competitor
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    Button({ onNavigateToAdd() } ) {
-                        Text("Add Participants")
+                    Button({ viewModel.changeEditMode(false); onNavigateToAdd() } ) {
+                        Text(stringResource(R.string.add_participant))
                     }
                     Button({ onNavigateToTimeTrial() }) {
-                        Text("Go to Start")
+                        Text(stringResource(R.string.to_start))
                     }
                 }
 
@@ -74,15 +77,23 @@ import com.github.mpiotr.competitionwatch.Competitor
                 userScrollEnabled = true,
                 modifier = Modifier.fillMaxSize().horizontalScroll(scroll_state).padding(innerPadding),
             ) {
-                items(
+                itemsIndexed(
                     items = competitors,
-                    key = { it.id }
+                    { ind : Int, item  : Competitor -> item.id }
                 )
-                { competitor ->
-                    CompetitorsItem(
+                {
+
+                    ind, competitor ->
+                    CompetitorItem(
                         competitor,
-                        onItemChanged = { updated: Competitor -> viewModel.onItemChanged(updated) },
-                        comp_start_time= viewModel.startTime.collectAsState().value
+                        viewModel,
+                        item_color = Pair(0, "Black"),
+                        comp_start_time= viewModel.startTime.collectAsState().value,
+                        onNavigateToEdit = onNavigateToAdd,
+                        modifier = Modifier.background(if(ind % 2 == 0)
+                            MaterialTheme.colorScheme.surfaceVariant
+                        else
+                            MaterialTheme.colorScheme.surface, RectangleShape)
                     )
                 }
             }

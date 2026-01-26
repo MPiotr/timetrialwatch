@@ -1,10 +1,12 @@
 package com.github.mpiotr.competitionwatch
 
+import android.graphics.drawable.shapes.OvalShape
 import android.os.SystemClock
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,24 +20,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.delay
 
 
-@Composable fun CompetitorInfoScreen(number : Int,
+@Composable fun CompetitorInfoScreen(number : Bib,
                                      competitor: Competitor?,
-                                     racePosition : CompetitorViewModel.RacePositionItems?,
+                                     racePosition : RacePositionItems?,
                                      nowMs : Long,
                                      modifier: Modifier,
-                                     split_index : Int?)
+                                     split_index : Int?,
+                                     bib_colors : List<Int>)
 {
     AndroidView(
         { context ->
@@ -54,22 +57,26 @@ import kotlinx.coroutines.delay
 
             val splitView = view.findViewById<TextView>(R.id.splitView)
 
-            numberView.text = number.toString()
+            numberView.text = number.bib_number.toString()
+            numberView.setTextColor(bib_colors[number.bib_color])
 
-            if(competitor != null) {
-                racePosition!!
+            Log.d("INFO ITEM", "$number : $competitor, $split_index, $racePosition")
+
+            if(competitor != null && racePosition != null) {
                 split_index!!
+
                 competitorTimeView.visibility = View.VISIBLE
                 competitorNameView.text = "${racePosition.currentPosition}: ${competitor.name}"
                 competitorNameView.textAlignment = View.TEXT_ALIGNMENT_TEXT_START
                 competitorTimeView.text = competitor.formattedRaceTime(nowMs)
+                splitView.visibility = View.VISIBLE
                 splitView.text = "Coming to split ${split_index + 1}"
                 if(racePosition!!.leader != null)
                 {
                     leaderNameView.visibility= View.VISIBLE
                     leaderTimeView.visibility= View.VISIBLE
-                    leaderNameView.text = "${racePosition.currentPosition - 1}: ${racePosition.leader.name}"
-                    leaderTimeView.text = racePosition.leader.formattedSplitsRaceTime()[split_index]
+                    leaderNameView.text = "${racePosition.currentPosition - 1}: ${racePosition.leader.second.name}"
+                    leaderTimeView.text = racePosition.leader.second.formattedTime(racePosition.leader.first)
                 }
                 else {
                     if(racePosition.numCompleted == 0){
@@ -85,8 +92,8 @@ import kotlinx.coroutines.delay
                 if(racePosition.chaser != null) {
                     chaserNameView.visibility= View.VISIBLE
                     chaserTimeView.visibility= View.VISIBLE
-                    chaserNameView.text = "${racePosition.currentPosition+1}: ${racePosition.chaser.name}"
-                    chaserTimeView.text = racePosition.chaser.formattedSplitsRaceTime()[split_index]
+                    chaserNameView.text = "${racePosition.currentPosition+1}: ${racePosition.chaser.second.name}"
+                    chaserTimeView.text = racePosition.chaser.second.formattedTime(racePosition.chaser.first)
                 }
                 else {
                     chaserNameView.visibility= View.GONE
@@ -113,84 +120,108 @@ import kotlinx.coroutines.delay
     val comp_start_time by viewModel.startTime.collectAsState()
     var nowms by remember { mutableLongStateOf(0L) }
     var splittime by remember { mutableLongStateOf(0L) }
+    var splitindex_local by remember { mutableStateOf(0) }
     var isFinishing by remember { mutableStateOf(false) }
-    var number = remember { mutableIntStateOf(0)}
+    var number = remember { mutableStateOf(Bib(0,0))}
+    var localRacePosition by remember { mutableStateOf< RacePositionItems?>(null) }
+    var localCompetitor by remember { mutableStateOf<Competitor?>(null) }
+    val currentItem by viewModel.currentItem.collectAsState()
+    val currentBib by viewModel.currentBib.collectAsState()
+
+
+
     LaunchedEffect(nowms, comp_start_time) {
         val now = SystemClock.elapsedRealtime()
         nowms = now
         delay(200)
     }
+
+    val competitor = viewModel.getCompetitor(number.value).collectAsState()
+    LaunchedEffect(competitor) { }
+
+
     isFinishing = false
     if(splittime != 0L && nowms - splittime > 1000) {
         splittime = 0
-        number.intValue = 0;
+        viewModel.selectSplit(0)
+        number.value = Bib(0, 0);
+        viewModel.selectBib(number.value)
+        localCompetitor = null
+        localRacePosition = null
     }
-    Log.d("SPLIT IME", "$splittime, ${splittime -  nowms}")
+    //Log.d("SPLIT IME", "$splittime, ${splittime -  nowms}")
 
     Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.Top, modifier = Modifier
         .fillMaxWidth()
-        .padding(12.dp).height(200.dp) ) {
+        .padding(12.dp)
+        .height(230.dp) ) {
 
-        LaunchedEffect(number)       {}
+        val valid_bib = number.value != Bib(0,0)
+        val split_buttons_enabled = valid_bib && splittime == 0L && currentItem != null && !(currentItem?.finished ?: true) && (currentItem?.started ?: false)
+        val dial_buttons_enabled = splittime == 0L
 
-        NumberDial({
-            updated : Int -> number.value = updated
-            Log.d("Split Item", "new number = ${number.value}")
-        },
-                number.value
+        NumberDial({updated : Bib ->
+                   number.value = updated
+                   viewModel.selectBib(updated)},
+                number.value.bib_number,
+                viewModel,
+                dial_buttons_enabled
             )
 
         Column()
         {
-            var valid_bib = viewModel.bibIndex.contains(number.value.toString())
 
-            if (valid_bib) {
-                val item_ind = viewModel.bibIndex[number.value.toString()]
-                val item: Competitor =
-                    viewModel.competitorsStateFlow.collectAsState().value[item_ind!!]
-                if(item.finished) valid_bib = false
-                if(item.started && !item.finished) {
-                    var splitIndex: Int
-                    var racePosition: CompetitorViewModel.RacePositionItems
-                    if (splittime == 0L) {
-                        splitIndex = item.splits.size
-                        if(splitIndex == viewModel.settings.value.max_num_of_splits - 1) {
-                            isFinishing = true
-                        }
-                        else false
+            val racePositionLive = viewModel.racePositionLive.collectAsState()
 
-                        racePosition = viewModel.racePositionLive(nowms, item_ind, splitIndex)
-                    } else {
-                        splitIndex = item.splits.size - 1
-                        racePosition = viewModel.racePositionCompleted(item_ind, splitIndex)
-                    }
-                    CompetitorInfoScreen(
-                        number.value, item, racePosition,
-                        if (splittime != 0L) splittime else nowms,
-                        Modifier.fillMaxWidth().weight(1.0f), splitIndex
-                    )
-                }
-                else CompetitorInfoScreen(number.value, null, null, nowms, Modifier.fillMaxWidth().weight(1.0f), null)
-            } else {
-                CompetitorInfoScreen(number.value, null, null, nowms, Modifier.fillMaxWidth().weight(1.0f), null)
+
+            if (valid_bib && currentItem != null && currentItem == racePositionLive.value?.first &&
+                ((currentItem!!.started && !currentItem!!.finished )|| (currentItem!!.finished && splittime != 0L) )
+                && racePositionLive.value != null && splittime == 0L) {
+                localCompetitor = currentItem
+                localRacePosition = racePositionLive.value!!.second
+                splitindex_local = currentItem!!.splits.size
+                isFinishing = viewModel.isCurrentCompetitorFinishing.collectAsState().value
             }
+            else {
+                if(splittime == 0L || currentItem == null || currentItem?.finished ?: true) {
+                    localCompetitor = null
+                    localRacePosition = null
+                }
+            }
+
+            CompetitorInfoScreen(
+                number.value, localCompetitor, localRacePosition,
+                if (splittime != 0L) splittime else nowms,
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1.0f), splitindex_local,
+                viewModel.colorPallete
+            )
 
             Button(
                 {
-                    if (valid_bib) {
-                        val item_ind = viewModel.bibIndex[number.value.toString()]
+                    if (valid_bib && currentItem != null) {
+                        //val item_ind = viewModel.bibIndex[number.value]
                         splittime = SystemClock.elapsedRealtime()
-                        viewModel.onSplit(splittime, item_ind!!)
+                        viewModel.onSplit(splittime, number.value)
 
                     }
                 },
-                enabled = valid_bib && splittime == 0L,
+                /*colors = ButtonColors(
+                    colorResource(R.color.md_theme_primary),
+                    contentColor = colorResource(R.color.md_theme_onPrimary),
+                    ),*/
+                enabled = split_buttons_enabled,
                 modifier = Modifier
                     .height(75.dp)
                     .width(180.dp)
                     .align(Alignment.CenterHorizontally)
             )
-            { if(!isFinishing) Text("Split") else Text("Finish") }
+
+            {
+               val text =  if(!isFinishing) "Split" else "Finish"
+              Text(text, color = colorResource(R.color.md_theme_onPrimary))
+            }
         }
 
     }

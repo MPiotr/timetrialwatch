@@ -1,3 +1,20 @@
 <resources>
     <string name="app_name">Competition Watch</string>
+    <string name="main_group_name">Regular</string>
+    <string name="men">Men</string>
+    <string name="women">Women</string>
+    <string name="group_name">group name</string>
+    <string name="group">group</string>
+    <string name="toast_on_competitor_added">%1$s added</string>
+    <string name="toast_on_competitor_changed">%1$s saved</string>
+    <string name="add_participant">Add a participant</string>
+    <string name="to_start">Go to Start</string>
+    <string name="to_list">List of Competitors</string>
+    <string name="save">Save</string>
+    <string name="add_and_next">Add and go next</string>
+    <string name="to_results">Results</string>
+    <string name="start_race">Start Competitions</string>
+    <string name="next_participants_to_start">Next participant to start</string>
+    <string name="not_yet_finished">%1$d competitors are not yet finished</string>
+    <string name="stop_race">Stop Competitions</string>
 </resources>

@@ -2,105 +2,215 @@ package com.github.mpiotr.competitionwatch
 
 
 import android.app.Application
+import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import android.os.Environment
-import android.os.Environment.getExternalStorageDirectory
+import android.os.SystemClock
 import android.util.Log
-import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.compose.runtime.mutableStateOf
+import androidx.datastore.core.IOException
+import androidx.datastore.core.MultiProcessDataStoreFactory
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import androidx.datastore.core.Serializer
+import androidx.lifecycle.application
+import androidx.room.withTransaction
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import java.io.File
 import java.io.FileOutputStream
-import java.lang.Math.pow
-import kotlin.math.log10
-import kotlin.math.max
+import java.io.InputStream
+import java.io.OutputStream
+import kotlin.collections.sortedWith
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.transformLatest
 
 
-class CompetitorViewModel(application : Application) : AndroidViewModel(application) {
-    data class DigitsForPicker(val maxBibNumber : Int, val numDigits : Int, val maxGreaterDigit : Int)
-    data class RacePositionInd(val currentPosition : Int, val leaderInd : Int, val chaserInd : Int, val numCompleted : Int)
+class CompetitorViewModel(application : Application, val dao : CompetitorDao, val database: AppDatabase) : AndroidViewModel(application) {
+    val colorPallete : List<Int> = listOf(Color.BLUE, Color.GREEN, Color.RED, Color.BLACK, Color.YELLOW)
+    val colorNames : List<String> = listOf("Blue", "Green", "Red", "Black", "Yellow")
+    var colorOrder : MutableList<Int> = mutableListOf()
+
+
+    var waitDataset = false
+
+    val _editCompetitor =MutableStateFlow(false)
+    val editCompetitor = _editCompetitor.asStateFlow().stateIn(viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        false)
+    fun changeEditMode(edit : Boolean){
+        _editCompetitor.value = edit
+    }
+
+
+    val main_group_name = application.resources.getString(R.string.main_group_name)
+    val _groupsStateFlow = MutableStateFlow(mutableSetOf<String>(main_group_name))
+    val groups = dao.groups().stateIn(viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        listOf(Groups(1L)))
+    fun onCreateNewGroup()
     {
-        override fun toString() : String
-        {
-            return "current: $currentPosition, leader $leaderInd; chaser $chaserInd; numCompleted $numCompleted"
+        viewModelScope.launch {
+                val newid = dao.groups().first().size + 1L
+                val new_group = Groups(newid, "New Group Name")
+                dao.insertGroup(new_group)
+
         }
     }
-    data class RacePositionItems(val currentPosition : Int, val leader : Competitor?, val chaser : Competitor?, val numCompleted : Int)
-    {
-        override fun toString() : String
-        {
-            return "current: $currentPosition, leader: $leader, chaser $chaser, numCompleted $numCompleted"
+    fun onGroupUpdated(updated : Groups) {
+        viewModelScope.launch {
+            dao.updateGroup(updated)
         }
     }
-    data class Settings(val start_interval_seconds : Int, val max_num_of_splits : Int)  {}
+    val _groupIndex = mutableMapOf(main_group_name to 0)
+
+// return colorSet.map{Pair(colorPallete[it], colorNames[it])}
 
 
-//TODO bib_numbers uniuque!!!
-    var competitors  = listOf(
-        Competitor("1", "1", "Andrew Anderson",  1, 18, 0 ),
-        Competitor("2", "2", "Bob Brown", 1, 19, 0 ),
-        Competitor("3", "3", "Cute Candid", 0, 19, 0 ),
-        Competitor("4", "4", "Donald the Dumb", 0),
-        Competitor("5", "5", "Rich Royal",  1, 18, 0 ),
-        Competitor("6", "6", "Fucking Fred", 1, 19, 0 ),
-        Competitor("7", "7", "Gentle Genry", 0, 19, 0 ),
-        Competitor("8", "8", "Honest Hue", 0),
-        Competitor("9", "9", "Idilic Idol",  1, 18, 0 ),
-        Competitor("10", "10", "John Wick", 1, 19, 0 ),
-        Competitor("11", "11", "Keen Kate", 0, 19, 0 ),
-        Competitor("12", "12", "Lame Larry", 0),
-        Competitor("13", "13", "Mindful Michelangelo",  1, 18, 0 ),
-        Competitor("14", "14", "Neat Natan", 1, 19, 0 ),
-        Competitor("15", "15", "Optimistic Oppenheimer", 0, 19, 0 ),
-        Competitor("16", "16", "Picky Peter", 1),
+    var competitors  = com.github.mpiotr.competitionwatch.competitors
+    val competitorCountFlow = dao.competitorCount().stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        0
+    )
+    var competitorCount: Int = 0
+    //var registeredBibs : MutableSet<Bib>? = null
 
+
+    val timeFlow =  flow { while(true) {
+        emit(SystemClock.elapsedRealtime())
+        delay(200)
+    } }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        System.currentTimeMillis()
     )
 
-    var bibIndex : MutableMap<String, Int> = mutableMapOf()
+    val _currentBib = MutableStateFlow(Bib(0,0))
+    val currentBib = _currentBib.asStateFlow()
+    val minRevision = MutableStateFlow(0L)
+    fun selectBib(bib : Bib) {
+        _currentBib.value = bib
+        minRevision.value = 0L
+    }
+
+
+
+
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val currentItem = currentBib.transformLatest { bib ->
+        combine(dao.getCompetitor(bib.bib_number, bib.bib_color), minRevision)
+        {
+                item, minrev ->
+           /* if(item != null && item.revision >= minrev)
+                item
+            else
+                null*/ item
+        }.collect { emit(it)  }}.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null)
+
+    val _currentSplit = MutableStateFlow(0)
+    val currentSplit = _currentSplit.asStateFlow()
+    fun selectSplit(i : Int) {
+        _currentSplit.value = i
+    }
+
+    val notYetFinished = dao.getAll()
+             .map { all ->
+                 all.mapNotNull { one ->
+                     if (one.started && !one.finished)
+                         one
+                     else
+                         null
+                 }
+             }
+            .stateIn(viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        emptyList<Competitor>())
+
+
+    fun countBib(bib : Bib): StateFlow<Int> {
+        return dao.countBib(bib.bib_number, bib.bib_color).stateIn(
+            viewModelScope,
+            SharingStarted.Eagerly,
+            0
+        )
+    }
+
+    fun getCompetitor(bib : Bib): StateFlow<Competitor> {
+        return dao.getCompetitor(bib.bib_number, bib.bib_color).stateIn(
+            viewModelScope,
+            SharingStarted.Eagerly,
+            newCompetitor()
+        )
+    }
+
+    var bibIndex : MutableMap<Bib, Int> = mutableMapOf()
+
     init {
         for(c in competitors.withIndex())
-            bibIndex[c.value.bib_number] = c.index
+            bibIndex[c.value.bib] = c.index
+
+        viewModelScope.launch {
+            competitorCountFlow.collect {value -> competitorCount = value }
+           // _registeredBibs.collect { value -> registeredBibs = value.toMutableSet()}
+        }
+
     }
 
-    private var maxBibNumber : Int = 0
-
-    var max_number_or_splits = 4
-    var start_interval = 30
-    private val _settings = MutableStateFlow(Settings(30, 4))
-    val settings : StateFlow<Settings> = _settings.asStateFlow()
-
-    fun getMaxBibNumber() : Int { return maxBibNumber}
-    fun getDigitsForPicker() : DigitsForPicker {
-        val maxBibNumber = maxBibNumber
-        val numDigits = log10(maxBibNumber.toDouble()).toInt() + 1
-        val maxGreaterDigit = maxBibNumber / pow(10.0, (numDigits - 1).toDouble()).toInt()
-        return DigitsForPicker(maxBibNumber, numDigits, maxGreaterDigit)
-    }
-
-    var timeTrialStart = System.currentTimeMillis()
-    private val _timeTrialStarted = MutableStateFlow(false);
-    val timeTrialStarted : StateFlow<Boolean> = _timeTrialStarted.asStateFlow()
+    private var maxBibNumber : StateFlow<Int>  = dao.max_bib_number().stateIn(viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        0)
 
 
-    private val _competitorsStateFlow = MutableStateFlow(competitors)
-    val competitorsStateFlow : StateFlow<List<Competitor> > =  _competitorsStateFlow.asStateFlow()
+    val settings : StateFlow<Settings?> = dao.settings().stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        initialValue = null
+    )
 
-    private val _startTime = MutableStateFlow(timeTrialStart)
-    val startTime : StateFlow<Long> = _startTime.asStateFlow()
+    val timeTrialStarted : StateFlow<Boolean> =
+        dao.settings().map{
+            it.competition_start_time != 0L
+        }
+            .stateIn(viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        false)
 
-    fun getStartTime() : Long {
-        return _startTime.value
-    }
+
+    //private val _competitorsStateFlow = MutableStateFlow(competitors)
+    //val competitorsStateFlow : StateFlow<List<Competitor> > =  _competitorsStateFlow.asStateFlow()
+    val competitorsStateFlow : StateFlow<List<Competitor> > =
+                     dao.getAll().stateIn(viewModelScope,
+                                SharingStarted.WhileSubscribed(5_000),
+                                emptyList())
+
+
+
+
+    val startTime : StateFlow<Long> = dao.settings().map { it.competition_start_time }.stateIn(viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        0L)
 
     fun formattedRaceTime(nowms : Long) : String {
         val duration = (nowms - startTime.value).milliseconds
@@ -113,70 +223,84 @@ class CompetitorViewModel(application : Application) : AndroidViewModel(applicat
 
     fun onItemChanged(updated: Competitor)
     {
-        maxBibNumber = max(maxBibNumber,updated.bib_number.toInt())
-        _competitorsStateFlow.update { list ->
-            list.mapIndexed { ind, item ->
-                if(item.id == updated.id) {
-                bibIndex[item.bib_number] = ind
-                updated
-            } else item}
+        viewModelScope.launch {
+            dao.update(updated)
         }
     }
     fun onItemAdded( added: Competitor)
     {
-        maxBibNumber = max(maxBibNumber,added.bib_number.toInt())
-        _competitorsStateFlow.update {
-            list ->
-            bibIndex[added.bib_number] = list.size
-            list + added
+        competitorCount++
+        viewModelScope.launch {
+            waitDataset = true
+            dao.insert(added)
+            //registeredBibs!!.add(added.bib)
+            bibIndex[added.bib] = competitorCount
+            waitDataset = false
+        }
+
+    }
+
+    fun onSettingsUpdated(updated: Settings) {
+        viewModelScope.launch {
+            dao.updateSettings( updated )
         }
     }
 
-    fun onSettingsUpdated(updated: Settings)
-    {
-        _settings.value = updated
-    }
-
     fun newCompetitor() : Competitor {
-        val nexid = _competitorsStateFlow.value.size + 1
-        return Competitor(nexid.toString(), "", "", 0, 0, 0)
+
+        var nextid = competitorCount + 1L
+        return Competitor(nextid, Bib(0,0), "", main_group_name, 1, 0)
     }
 
     fun arrangeStartTimes()
     {
-        val start_interval = _settings.value.start_interval_seconds
-
-        _competitorsStateFlow.update { list ->
-            list.sortedWith { a, b ->
-                if (a.sex != b.sex) -a.sex + b.sex
-                else if (a.group != b.group) a.group - b.group
-                else a.bib_number.toInt() - b.bib_number.toInt()
+        viewModelScope.launch {
+            val start_interval = settings.value!!.start_interval_seconds
+            val arranged = competitorsStateFlow.value.sortedWith { a, b ->
+                if (a.group != b.group)
+                    _groupIndex[a.group]?.minus(_groupIndex[b.group] ?: 0) ?: 0
+                else if (a.sex != b.sex) -a.sex + b.sex
+                else a.bib.compareTo(b.bib)
+            }.mapIndexed { index, competitor ->
+                if (!competitor.started)
+                    competitor.copy(startTime = index * 1000L * start_interval + 30000)
+                else competitor
             }
-                .mapIndexed { index, competitor -> if(!competitor.started) competitor.copy(startTime = index * 1000L*start_interval + 30000) else competitor }
-        }
+            dao.updateAll(arranged)
 
-        maxBibNumber = _competitorsStateFlow.value.maxOf { it.bib_number.toInt() }
+
+            val colorMap: MutableMap<Int, Int> = mutableMapOf()
+            for (c in competitorsStateFlow.value) {
+                val color = c.bib.bib_color
+                if (colorMap.contains(color)) colorMap[color] = colorMap[color]!! + 1
+                else colorMap[color] = 1
+            }
+
+            colorOrder = colorMap.map { Pair(it.value, it.key) }
+                .sortedByDescending { it.first }.map{it.second}.toMutableList()
+
+        }
     }
 
-    val nextStartingCompetitors: StateFlow<List<Competitor>> =
-        _competitorsStateFlow.map {
-            list ->
-            list.mapNotNull {item ->  if(!item.started)  item else null }
-            .sortedWith {
-                    a, b ->
-                if(a.sex != b.sex)    -a.sex + b.sex
-                else if(a.group != b.group)  a.group - b.group
-                else a.bib_number.toInt() - b.bib_number.toInt()
-            }.take(5)
-        }.stateIn(viewModelScope,
+      val nextStartingCompetitors: StateFlow<List<Competitor>> =
+        competitorsStateFlow.map { list ->
+            list.filter { !it.started }
+                .sortedBy { it.startTime }
+                .take(5)
+        }
+        .distinctUntilChanged{old, new ->
+                            old.map { it.id to it.started } ==
+                            new.map { it.id to it.started }
+        }
+        .stateIn(viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyList())
+            initialValue = emptyList<Competitor>())
 
-    fun getResults() : Map<Pair<Int,Int>,List<Competitor>> {
-        val all_results = _competitorsStateFlow.value.sortedWith { a, b ->
+    fun getResults() : Map<Pair<Int,String>,List<Competitor>> {
+        val all_results = competitorsStateFlow.value.mapNotNull { if(it.splits.size > 0) it else null }.sortedWith { a, b ->
 
-            if (a.sex != b.sex) -a.sex + b.sex
-            else if (a.group != b.group) a.group - b.group
+            if (a.group != b.group)  _groupIndex[a.group]?.minus(_groupIndex[b.group]?:0 ) ?: 0
+            else if (a.sex != b.sex) -a.sex + b.sex
             else {
                 if (a.finished != b.finished) {
                     if (a.finished) -1 else 1
@@ -201,16 +325,37 @@ class CompetitorViewModel(application : Application) : AndroidViewModel(applicat
     }
 
 
-    fun onSplit(splitTime : Long, itemIndex : Int)
+    fun onSplit(splitTime : Long, bib : Bib)
     {
-        _competitorsStateFlow.value[itemIndex].splits.add(splitTime)
-        if(_competitorsStateFlow.value[itemIndex].splits.size == _settings.value.max_num_of_splits)
-            _competitorsStateFlow.value[itemIndex].finished = true
-        Log.d("SPLITS", "new split time for $itemIndex: ${splitTime}")
+
+        viewModelScope.launch {
+            database.withTransaction {
+                val item: Competitor = dao.getCompetitor(bib.bib_number, bib.bib_color).first()
+                val group : Groups = dao.getGroup(item.group).first()
+                Log.d("ITEMUPDATE", "!")
+                val nextRevision = item.revision + 1
+                minRevision.value = nextRevision
+
+                val updated_splits =
+                    (item.splits + splitTime).toMutableList()
+                var finished = false
+                if (updated_splits.size == if(item.sex == 1) group.num_splits_men else group.num_splits_women)
+                    finished = true
+                val updated_item = item.copy(
+                    splits = updated_splits,
+                    finished = finished,
+                    revision = nextRevision
+                )
+                dao.update(updated_item)
+                val forceUpdate1 = dao.getCompetitor(bib.bib_number, bib.bib_color).first()
+                val forceUpdate2 = dao.getAll().first()
+                Log.d("SPLITS", "new split time for $bib: ${splitTime}")
+            }
+        }
     }
 
     fun splitsSlice(splitIndex : Int) : StateFlow<List<Pair<Long, Int>?>> {
-        return _competitorsStateFlow.map{ competitors ->
+        return competitorsStateFlow.map{ competitors ->
             competitors.mapIndexed { index, item ->
                 if(item.splits.size > splitIndex)
                     Pair(item.splits[splitIndex] - item.startTime, index)
@@ -220,75 +365,187 @@ class CompetitorViewModel(application : Application) : AndroidViewModel(applicat
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList<Pair<Long, Int>?>()
+            initialValue = emptyList()
         )
     }
 
-    fun racePositionCompleted(itemIndex : Int, splitIndex : Int) : RacePositionItems {
-        val splits = competitorsStateFlow.value[itemIndex].splits
-        val start_time =  competitorsStateFlow.value[itemIndex].startTime
-        if( splitIndex > splits.size)  {
+    val _racePositionCompleteRevision = MutableStateFlow(0L)
+    val racePositionCompleteRevision = _racePositionCompleteRevision.asStateFlow()
 
-            return RacePositionItems(-1, null, null, -1)
-        }
-
-        val allSplits =
-            competitorsStateFlow.value.mapIndexed {
-                    index, item ->
-                if(item.splits.size > splitIndex)
-                    Pair((item.splits[splitIndex] - item.startTime), index)
-                else
-                    null}.mapNotNull {
-                    item -> item }.sortedBy { it.first }
-
-        var position  = 0
-        for(i in 0..<allSplits.size) {
-            if(allSplits[i].second == itemIndex ) break
-            position++
-        }
-
-        val leader = if(position > 0) competitorsStateFlow.value[allSplits[position-1].second] else null
-        val chaser = if(position +1 < allSplits.size) competitorsStateFlow.value[allSplits[position+1].second] else null
-
-        return RacePositionItems(position+1,leader,chaser,allSplits.size)
+    sealed interface RacePositionUiState {
+        object Calculating : RacePositionUiState
+        data class Data(val value: RacePositionItems) : RacePositionUiState
     }
 
-    fun racePositionLive(msnow : Long, itemIndex : Int, splitIndex : Int) : RacePositionItems {
-        val splits = competitorsStateFlow.value[itemIndex].splits
-        val start_time =  competitorsStateFlow.value[itemIndex].startTime
-        if( splitIndex > splits.size)  {
 
-            return RacePositionItems(-1, null, null, -1)
+    val racePositionCompleted : StateFlow<RacePositionUiState> =
+        combine(currentItem,
+            competitorsStateFlow,
+            minRevision
+             ) { current, all, minrev ->
+            RacePositionUiState.Calculating
+        }.flatMapLatest { combine(currentItem,
+            competitorsStateFlow,
+            minRevision
+        ) { current, all, minrev ->
+            val competitor = current
+            if (competitor == null || competitor.revision < minrev ) {
+                Log.d("RACE POSITION CALCULATION", "Rejected")
+                RacePositionUiState.Calculating
+            } else {
+                val splits = competitor.splits
+                val splitIndex = splits.size - 1
+                Log.d("RACE POSITION CALCULATION", splitIndex.toString())
+
+                try {
+                    val allSplits =
+                        all.map { item ->
+                            if (item.splits.size > splitIndex && item.sex == competitor.sex && item.group == competitor.group) {
+                                Pair((item.splits[splitIndex] - item.startTime), item)
+                            } else
+                                null
+                        }.mapNotNull { item -> item }.sortedBy { it.first }
+
+
+                    var position = 0
+                    var found = false
+                    for (i in 0..<allSplits.size) {
+                        if (allSplits[i].second.id == competitor.id) {
+                            found = true
+                            if (allSplits[i].second.revision < minrev)
+                                found = false
+                            break
+                        }
+                        position++
+                    }
+                    if (found) {
+                        val leader = if (position > 0) allSplits[position - 1] else null
+                        val chaser =
+                            if (position + 1 < allSplits.size) allSplits[position + 1] else null
+                        Log.d(
+                            "ALLSPLITS",
+                            "Leader: ${leader?.second?.name}, size = ${leader?.second?.splits?.size}, ${leader?.second?.revision}"
+                        )
+                        Log.d(
+                            "ALLSPLITS",
+                            "Chaser: ${chaser?.second?.name}, size = ${chaser?.second?.splits?.size}, ${chaser?.second?.revision}"
+                        )
+                        RacePositionUiState.Data(RacePositionItems(position + 1, leader, chaser, allSplits.size))
+                    } else
+                         RacePositionUiState.Calculating
+                } catch (e: Exception) {
+                     RacePositionUiState.Calculating
+                }
+            }
         }
+    }.filterNotNull().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue =  RacePositionUiState.Calculating
+        )
 
+/*
+    fun racePositionCompleted(bib : Bib, splitIndex : Int) : StateFlow<RacePositionItems?> {
+        return flow {
+            val competitor = dao.getCompetitor(bib.bib_number, bib.bib_color).first()
+            val splits = competitor.splits
 
+            if (splitIndex > splits.size) {
 
-        val allSplits =
-            competitorsStateFlow.value.mapIndexed {
-                    index, item ->
-                if(item.splits.size > splitIndex)
-                    Pair((item.splits[splitIndex] - item.startTime), index)
-                else
-                    null}.mapNotNull {
-                    item -> item }.sortedBy { it.first }
+                emit(RacePositionItems(-1, null, null, -1))
+            }
 
-        var position  = 0
-        for(i in 0..<allSplits.size) {
-            if(allSplits[i].first > msnow - start_time) break
-            position++
-        }
+            val allSplits =
+                dao.getAll().first().map { item ->
+                    if (item.splits.size > splitIndex && item.sex == competitor.sex && item.group == competitor.group)
+                        Pair((item.splits[splitIndex] - item.startTime), item)
+                    else
+                        null
+                }.mapNotNull { item -> item }.sortedBy { it.first }
 
-        val leader = if(position > 0) competitorsStateFlow.value[allSplits[position-1].second] else null
-        val chaser = if(position  >= 0 && position < allSplits.size) competitorsStateFlow.value[allSplits[position].second] else null
+            var position = 0
+            var found = false
+            for (i in 0..<allSplits.size) {
+                if (allSplits[i].second.bib == bib) {
+                    found = true
+                    break
+                }
+                position++
+            }
 
-        return RacePositionItems(position+1,leader,chaser,allSplits.size)
-    }
+            if(!found) emit(RacePositionItems(-1, null, null, -1))
+
+            /*Log.d("SPLITS (C):", "split index = $splitIndex")
+            for(c in allSplits) {
+                Log.d("SPLITS (C):", "${c.first}: ${c.second}")
+            }*/
+
+            val leader = if (position > 0) allSplits[position - 1].second else null
+            val chaser = if (position + 1 < allSplits.size) allSplits[position + 1].second else null
+
+            emit( RacePositionItems(position + 1, leader, chaser, allSplits.size))
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = null
+        )
+    }*/
+
+    val racePositionLive :  StateFlow<Pair<Competitor, RacePositionItems>?> =
+        combine(currentItem, timeFlow, competitorsStateFlow) { competitor, msnow, all ->
+            if(competitor == null ) {
+                null
+            }
+            else {
+                val splits = competitor.splits
+                val start_time = competitor.startTime
+                val splitIndex = splits.size
+
+                val allSplits =
+                    all.map { item ->
+                        if (item.splits.size > splitIndex && item.sex == competitor.sex && item.group == competitor.group)
+                            Pair((item.splits[splitIndex] - item.startTime), item)
+                        else
+                            null
+                    }.mapNotNull { item -> item }.sortedBy { it.first }
+
+                var position = 0
+                for (i in 0..<allSplits.size) {
+                    if (allSplits[i].first > msnow - start_time) break
+                    position++
+                }
+
+                val leader =
+                    if (position > 0) allSplits[position - 1] else null
+                val chaser =
+                    if (position >= 0 && position < allSplits.size) allSplits[position]  else null
+
+                Pair(competitor,RacePositionItems(position + 1, leader, chaser, allSplits.size))
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null
+        )
+
+    val isCurrentCompetitorFinishing : StateFlow<Boolean> =
+        combine(currentItem, groups) {competitor, allgroup ->
+            val _group = competitor?.group ?: return@combine false
+            val group_info =  allgroup.first { _group == it.name }
+            if(competitor.sex == 1)
+                competitor.splits.size == group_info.num_splits_men - 1
+            else
+                competitor.splits.size == group_info.num_splits_women - 1
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = false
+        )
 
 
     fun onTimeTrialStarted(startTime : Long) {
-        if(!_timeTrialStarted.value) {
-            _startTime.update {  startTime }
-            _timeTrialStarted.update {  true}
+        if(settings.value != null) {
+            onSettingsUpdated(settings.value!!.copy(competition_start_time = startTime))
         }
     }
 
@@ -319,7 +576,8 @@ class CompetitorViewModel(application : Application) : AndroidViewModel(applicat
         y += titlePaint.textSize + 2.5f
         val result = getResults()
         for( kvpair in result) {
-            val sexname = if (kvpair.key.first == 1) "Men" else "Women"
+            val sexname = if (kvpair.key.first == 1) application.resources.getString(R.string.men)
+                          else                       application.resources.getString(R.string.women)
             y += subTitlePaint.textSize*1.0f
             canvas.drawText("$sexname group ${kvpair.key.second}", titleOffsetX, y, subTitlePaint)
             y += subTitlePaint.textSize*0.5f
@@ -370,6 +628,7 @@ class CompetitorViewModel(application : Application) : AndroidViewModel(applicat
 
         val myExternalFile =
             File(getApplication<Application>().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "result.pdf")
+        Log.d("PDF WRITE", "$myExternalFile")
         val stream = FileOutputStream(myExternalFile )
         pdfDoc.writeTo(stream)
         pdfDoc.close()

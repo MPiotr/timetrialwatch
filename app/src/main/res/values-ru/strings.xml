@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Competition Watch</string>
+    <string name="main_group_name">Основная</string>
+    <string name="men">Мужчины</string>
+    <string name="women">Женщины</string>
+    <string name="group_name">название группы</string>
+    <string name="group">группа</string>
+    <string name="toast_on_competitor_added">%1$s добавлен</string>
+    <string name="toast_on_competitor_changed">%1$s сохранён</string>
+    <string name="add_participant">Добавить участника</string>
+    <string name="to_start">На старт</string>
+    <string name="to_list">К списку участников</string>
+    <string name="save">Сохранить</string>
+    <string name="add_and_next">Добавить</string>
+    <string name="to_results">Результаты</string>
+    <string name="start_race">Начать соревнования</string>
+    <string name="next_participants_to_start">Следующие стартуют</string>
+    <string name="not_yet_finished">%1$d участников не финишировали</string>
+    <string name="stop_race">Закончить соревнования</string>
+</resources>

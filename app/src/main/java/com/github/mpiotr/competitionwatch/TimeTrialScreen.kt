@@ -2,6 +2,7 @@ package com.github.mpiotr.competitionwatch
 
 import android.os.SystemClock
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,11 +12,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,14 +30,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
                     onNavigateToList : ()->Unit,
@@ -43,22 +47,17 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
     val timeTrialStarted = viewModel.timeTrialStarted.collectAsState()
     val nextStartingCompetitors = viewModel.nextStartingCompetitors.collectAsState()
     val vSettings by  viewModel.settings.collectAsState()
-
-    var settings =  remember   { mutableStateOf(CompetitorViewModel.Settings(30, 4)) }
-
-
+    val onTrack = viewModel.notYetFinished.collectAsState()
+    val numOnTrack = onTrack.value.size
 
 
     var elapsedMs by remember { mutableLongStateOf(0L) }
+    var showStopDialog = remember { mutableStateOf(false)}
 
     LaunchedEffect(comp_start_time, elapsedMs) {
             val now = SystemClock.elapsedRealtime()
             elapsedMs = now
             delay(100) // 10 FPS precision
-
-    }
-    LaunchedEffect(vSettings) {
-        settings.value = vSettings
 
     }
     LaunchedEffect(nextStartingCompetitors) {
@@ -69,11 +68,11 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
 
     Scaffold(modifier = modifier.fillMaxSize(),
         topBar = {
-            Row(Modifier.height(64.dp).background(Color.Blue).fillMaxWidth(),
+            Row(Modifier.height(64.dp)//.background(Color.Blue)
+                .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically) {
                 Text("Starting order",
                     fontSize = 24.sp,
-                    color = Color.White,
                     modifier = Modifier.padding(start = 16.dp))
             }
         },
@@ -81,13 +80,12 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
             Row(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.Blue, RectangleShape),
+                    .fillMaxWidth(),
                 verticalAlignment = Alignment.Bottom
             ) {
 
                 Button({ onNavigateToList() }, Modifier.padding(8.dp)) {
-                    Text("Go to Participant List")
+                    Text(stringResource(R.string.to_list))
                 }
                 Button({ onNavigateToSplit() }, Modifier.padding(8.dp)) {
                     Text("Go to Split")
@@ -99,39 +97,18 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
     {iner_padding ->
         Column(Modifier.fillMaxSize().padding(iner_padding), horizontalAlignment = Alignment.CenterHorizontally) {
             if (!timeTrialStarted.value) {
-                Column()
-                {
-
-                    TextField(settings.value.start_interval_seconds.toString(),
-                        {
-                        updated -> settings.value = settings.value.copy(start_interval_seconds =  updated.toIntOrNull() ?: 15)},
-
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            label = { Text("Starting interval, s")},
-                        modifier = Modifier.onFocusChanged(
-                            {viewModel.onSettingsUpdated(settings.value)})
-                        )
-                    TextField(settings.value.max_num_of_splits.toString(),
-                        {
-                            updated -> settings.value =settings.value.copy(max_num_of_splits =  updated.toIntOrNull() ?: 4)},
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        label = { Text("Max number of splits")} ,
-                        modifier = Modifier.onFocusChanged(
-                            {viewModel.onSettingsUpdated(settings.value)})
-                    )
-                    Button(
-                        {
-                            val start_time = SystemClock.elapsedRealtime()
-                            viewModel.arrangeStartTimes()
-                            viewModel.onTimeTrialStarted(start_time)
-                        },
-                        Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(top = 10.dp)
-                    )
+                Button(
                     {
-                        Text("Start Competitions")
-                    }
+                        val start_time = SystemClock.elapsedRealtime()
+                        viewModel.arrangeStartTimes()
+                        viewModel.onTimeTrialStarted(start_time)
+                    },
+                    Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 10.dp)
+                )
+                {
+                    Text(stringResource(R.string.start_race))
                 }
             } else {
                 Text(
@@ -143,16 +120,49 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
                 )
 
                 Text(
-                    "Next participant to start",
+                    stringResource(R.string.next_participants_to_start),
                     Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(top = 10.dp),
                     fontSize = 18.sp
                 )
-                LazyColumn(Modifier.fillMaxSize()) {
-                    items(nextStartingCompetitors.value) { competitor ->
-                        CompetitorTimeTrialItem(competitor, Modifier, viewModel)
+                LazyColumn(Modifier.weight(1.0f)) {
+                    itemsIndexed(nextStartingCompetitors.value) { ind, competitor ->
+                        CompetitorTimeTrialItem(competitor, Modifier.background(if(ind+1 % 2 == 0)
+                            MaterialTheme.colorScheme.surfaceVariant
+                        else
+                            MaterialTheme.colorScheme.surface, RectangleShape), viewModel)
                     }
+                }
+
+                if(numOnTrack > 0)
+                    Text( stringResource(R.string.not_yet_finished).format(numOnTrack), fontSize = 18.sp)
+                Button({
+                    showStopDialog.value = true
+                       }, modifier = Modifier.combinedClickable(
+                    onClick = {
+                        showStopDialog.value = true
+                    },
+                    onLongClick = {
+                    },
+                )) {
+                    Text(stringResource(R.string.stop_race))
+                }
+
+                if(showStopDialog.value) {
+                AlertDialog(
+                    { showStopDialog.value = false},
+                    confirmButton = { TextButton({
+                        showStopDialog.value = false
+                        viewModel.onSettingsUpdated(vSettings!!.copy(competition_start_time = 0L))
+                    })
+                    {Text("Yes")} },
+                    dismissButton = { TextButton({showStopDialog.value = false}) {Text("No")} },
+                    title = {Text("Do you really want to stop the race")},
+                    text = {Text(if (numOnTrack != 0)
+                                            stringResource(R.string.not_yet_finished).format(numOnTrack)
+                                        else "")},
+                    )
                 }
             }
         }

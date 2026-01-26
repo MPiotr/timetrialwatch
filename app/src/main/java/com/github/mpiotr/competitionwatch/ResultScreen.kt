@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -35,7 +36,8 @@ fun ResultScreen(viewModel: CompetitorViewModel, modifier: Modifier, onNavigateT
     Scaffold(
         topBar = {
             Row(
-                Modifier.height(64.dp).background(Color.Blue).fillMaxWidth(),
+                Modifier.height(64.dp)//.background(Color.Blue)
+                    .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -68,9 +70,11 @@ fun ResultScreen(viewModel: CompetitorViewModel, modifier: Modifier, onNavigateT
             modifier = Modifier.fillMaxWidth().horizontalScroll(scroll_state).padding(innerPadding))
         {
             for( kvpair in result) {
-                val sexname = if(kvpair.key.first == 1) "Men" else "Women"
+
                 item {
-                Text("$sexname group ${kvpair.key.second}",
+                    val sexname = if(kvpair.key.first == 1) stringResource(R.string.men) else stringResource(R.string.women)
+                    val group_word = stringResource(R.string.group)
+                Text("$group_word ${kvpair.key.second}: $sexname",
                     modifier = Modifier.wrapContentWidth().padding(top=10.dp, bottom = 6.dp),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
