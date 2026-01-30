@@ -15,6 +15,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -49,7 +50,7 @@ fun GroupSelectorBox(selectedGroup : String, viewModel: CompetitorViewModel, onG
         Text(stringResource(R.string.group), fontSize = 10.sp)
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier,
+            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceDim, shape = RectangleShape),
 
         ) {
             Text(

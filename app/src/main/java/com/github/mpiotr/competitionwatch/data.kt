@@ -3,24 +3,15 @@ package com.github.mpiotr.competitionwatch
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Delete
-import androidx.room.Entity
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
-import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
 import androidx.room.Transaction
-import androidx.room.withTransaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 
-
-@Entity(tableName = "info")
-data class DataInfo(
-    @PrimaryKey val id : Long,
-    val writeCount : Long = 0L
-)
 // DAO
 @Dao
 interface CompetitorDao {
@@ -49,6 +40,9 @@ interface CompetitorDao {
     @Query("SELECT * FROM groups WHERE name=:id")
     fun getGroup(id : String) : Flow<Groups>
 
+    @Query("SELECT email FROM  competitors")
+    fun allEmails() : List<String>
+
     @Update
     suspend fun updateGroup(group: Groups)
 
@@ -60,6 +54,9 @@ interface CompetitorDao {
 
     @Update
     suspend fun updateSettings(settings: Settings)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSettings(settings: Settings)
 
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -84,6 +81,15 @@ interface CompetitorDao {
 
     @Delete
     suspend fun delete(competitor: Competitor)
+
+    @Query("DELETE FROM competitors")
+    fun deleteAllCompetitors()
+
+    @Query("DELETE FROM groups")
+    fun deleteAllGroups()
+
+    @Query("DELETE FROM info")
+    fun deleteAllSettings()
 }
 
 

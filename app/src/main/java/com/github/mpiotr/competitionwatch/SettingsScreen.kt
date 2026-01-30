@@ -1,7 +1,10 @@
 package com.github.mpiotr.competitionwatch
 
+import android.R.attr.editable
 import android.content.Context
+import android.icu.util.Measure
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,11 +14,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -27,10 +33,15 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.Measured
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -39,11 +50,6 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : Modifier, onNavigateToList : () -> Unit)
 {
-    val cs = MaterialTheme.colorScheme
-    LaunchedEffect(Unit) {
-        Log.d("THEME_TRACE", "Settings: Primary = ${cs.primary}")
-        Log.d("THEME_TRACE", "Settings: OnPrimary = ${cs.onPrimary}")
-    }
     Scaffold(modifier = modifier.fillMaxSize(),
         topBar = {
             Row(Modifier.height(64.dp)//.background(Color.Blue)
@@ -51,18 +57,13 @@ fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : 
                 verticalAlignment = Alignment.CenterVertically) {
                 Text("Setup",
                     fontSize = 24.sp,
-                    color = Color.White,
                     modifier = Modifier.padding(start = 16.dp))
             }
         },
         bottomBar = {
             Row(horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()) {
-                LaunchedEffect(Unit) {
-                    Log.d("THEME_TRACE", "Settings Bottom Button: Primary = ${cs.primary}")
-                    Log.d("THEME_TRACE", "Settings Bottom Button: OnPrimary = ${cs.onPrimary}")
-                }
-                Button(
+                 Button(
                     {onNavigateToList()},
                     Modifier.padding(bottom = 20.dp, start = 20.dp, end = 20.dp),
                     content = { Text(stringResource(R.string.to_list)) },
@@ -72,7 +73,9 @@ fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : 
     )
     { innerPadding ->
 
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth().padding(innerPadding))
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth().padding(innerPadding))
         {
             val settings = viewModel.settings.collectAsState()
             if(settings.value == null) return@Scaffold
@@ -89,6 +92,32 @@ fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : 
             }
 
             val groups = viewModel.groups.collectAsState()
+            var showResetAlert by remember { mutableStateOf(false) }
+            val comps = viewModel.competitorsStateFlow.collectAsState()
+            Row {
+                val info_test = stringResource(R.string.databaseInfo).format(comps.value.size)
+
+                Text(info_test, modifier = Modifier.width(300.dp))
+                Spacer(Modifier.width(8.dp))
+                Button({showResetAlert = true}, modifier = Modifier.weight(1.0f)) { Text(stringResource(R.string.reset_data)) }
+                    if (showResetAlert)
+                    {
+                        AlertDialog( {showResetAlert = false},
+                            confirmButton = {
+                                Button({
+                                    showResetAlert = false
+                                    viewModel.resetData()
+                                }
+
+                                    ) {Text("Yes")} },
+                            dismissButton = {Button({showResetAlert = false}, ) {Text("No")} },
+                            title = {Text(stringResource(R.string.reset_data_title))}
+                        )
+                    }
+
+                }
+
+            HorizontalDivider(modifier = Modifier.padding(4.dp, 9.dp))
 
             TextField(
                 settings.value!!.start_interval_seconds.toString(),
@@ -101,10 +130,13 @@ fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : 
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 label = { Text("Starting interval, s") },
                 modifier = Modifier.onFocusChanged(
-                    { viewModel.onSettingsUpdated(settings.value!!) }).fillMaxWidth()
+                    { viewModel.onSettingsUpdated(settings.value!!) })
+                    .fillMaxWidth().padding(top = 16.dp)
             )
+            Spacer(Modifier.height(8.dp))
+            Text("Groups", fontSize = 20.sp)
 
-            LazyColumn() {
+            LazyColumn(Modifier.background(MaterialTheme.colorScheme.surface)) {
                 for (g in groups.value) {
                     item {
                         HorizontalDivider(modifier = Modifier.padding(4.dp, 9.dp))

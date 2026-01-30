@@ -19,6 +19,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -47,40 +49,46 @@ fun GenderSelectorBox(selected: Int, onItemSelected : (Int)-> Unit)
     var expanded by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.End,
-        modifier = Modifier.background(Color.LightGray, shape = RectangleShape)
-    )
-    {
-        Text(
-            if (sex == 1) "Man" else "Woman",
-            fontSize = 12.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(4.dp).width(50.dp)
+    Column {
+        Text(stringResource(R.string.sex), fontSize = 10.sp)
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End,
+            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceDim, shape = RectangleShape)
         )
-        Box(Modifier.wrapContentSize()) {
-            IconButton(onClick = { expanded = !expanded
-                focusManager.clearFocus(true)} )
-            {
-                Icon(Icons.Default.ArrowDropDown, contentDescription = "", Modifier.size(24.dp))
-            }
-            DropdownMenu(expanded = expanded, { expanded = false }) {
-                DropdownMenuItem(
-                    { Text("Man", fontSize = 10.sp) },
-                    {
-                        expanded = false;
-                        sex = 1
-                        onItemSelected(sex)
-                    }
-                )
-                DropdownMenuItem(
-                    { Text("Woman", fontSize = 10.sp) }, {
-                        expanded = false
-                        sex = 0
-                        onItemSelected(sex)
-                    }
-                )
+        {
+            Text(
+                if (sex == 1) "Man" else "Woman",
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(4.dp).width(50.dp)
+            )
+            Box(Modifier.wrapContentSize()) {
+                IconButton(onClick = {
+                    expanded = !expanded
+                    focusManager.clearFocus(true)
+                })
+                {
+                    Icon(Icons.Default.ArrowDropDown, contentDescription = "", Modifier.size(24.dp))
+                }
+                DropdownMenu(expanded = expanded, { expanded = false }) {
+                    DropdownMenuItem(
+                        { Text(stringResource(R.string.man), fontSize = 10.sp) },
+                        {
+                            expanded = false;
+                            sex = 1
+                            onItemSelected(sex)
+                        }
+                    )
+                    DropdownMenuItem(
+                        { Text(stringResource(R.string.woman), fontSize = 10.sp) }, {
+                            expanded = false
+                            sex = 0
+                            onItemSelected(sex)
+                        }
+                    )
+                }
             }
         }
     }

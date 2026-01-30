@@ -100,7 +100,6 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
                 Button(
                     {
                         val start_time = SystemClock.elapsedRealtime()
-                        viewModel.arrangeStartTimes()
                         viewModel.onTimeTrialStarted(start_time)
                     },
                     Modifier

@@ -37,8 +37,10 @@ data class Competitor
      val finished : Boolean = false,
      val startTime : Long = 0L,
      var result : Int = Int.MAX_VALUE,
+     var gap : Long? = null,
      val splits : MutableList<Long> = mutableListOf(),
-     val revision : Long = 0L)
+     val revision : Long = 0L,
+     val email : String? = null)
 {
 
     fun formattedStartRaceTime(comp_start_time : Long) : String{
@@ -80,6 +82,23 @@ data class Competitor
             "%02d:%02d:%02d.%d".format(hours, minutes, seconds, centiseconds)  }
         return competitionTime
     }
+
+        fun formattedGapTime(ms : Long) : String{
+        val duration = ms.milliseconds
+        val competitionTime = duration.toComponents {
+                hours, minutes, seconds, nanoseconds ->
+            val centiseconds = (nanoseconds / 10e7.toFloat()).toInt()
+            if(hours > 0)
+                "+%d:%02d:%02d.%d".format(hours, minutes, seconds, centiseconds)
+            else if(minutes > 0)
+                "+%d:%02d.%d".format( minutes, seconds, centiseconds)
+            else
+                "+%d.%d".format(seconds, centiseconds)
+        }
+        return competitionTime
+    }
+
+
 
     fun timeBeforeStart(msnow : Long, comp_start_time: Long) : String{
         val elapsedMs = msnow - startTime -  comp_start_time

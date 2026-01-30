@@ -43,7 +43,6 @@ fun ResultScreen(viewModel: CompetitorViewModel, modifier: Modifier, onNavigateT
                 Text(
                     "Results",
                     fontSize = 24.sp,
-                    color = Color.White,
                     modifier = Modifier.padding(start = 16.dp)
                 )
             }
@@ -55,7 +54,7 @@ fun ResultScreen(viewModel: CompetitorViewModel, modifier: Modifier, onNavigateT
                     Text("Go to Splits")
                 }
                 Button( {viewModel.resultPdf()}, modifier) {
-                    Text("Save pdf")
+                    Text("Send pdf to competitors")
                 }
             }
         }

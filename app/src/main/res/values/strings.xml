@@ -17,4 +17,15 @@
     <string name="next_participants_to_start">Next participant to start</string>
     <string name="not_yet_finished">%1$d competitors are not yet finished</string>
     <string name="stop_race">Stop Competitions</string>
+    <string name="databaseInfo">The database contains %1$d competitors, %1$d started and %1$d finished</string>
+    <string name="reset_data">Reset data</string>
+    <string name="reset_data_title">Reset database?</string>
+    <string name="race_time">race</string>
+    <string name="lap_time">lap</string>
+    <string name="sex">sex</string>
+    <string name="man">Man</string>
+    <string name="woman">Woman</string>
+    <string name="bib_color">Bib\'s color</string>
+    <string name="databaseIsEmpty">The database is empty</string>
+    <string name="competitionStartedAt">The competition started %1$s</string>
 </resources>

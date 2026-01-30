@@ -50,7 +50,6 @@ fun SplitScreen(viewModel: CompetitorViewModel, modifier: Modifier,
                 verticalAlignment = Alignment.CenterVertically) {
                 Text("Splits and Finish",
                     fontSize = 24.sp,
-                    color = Color.White,
                     modifier = Modifier.padding(start = 16.dp))
             }
         },

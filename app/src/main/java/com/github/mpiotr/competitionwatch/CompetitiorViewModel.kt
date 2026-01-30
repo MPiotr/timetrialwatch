@@ -2,48 +2,46 @@ package com.github.mpiotr.competitionwatch
 
 
 import android.app.Application
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
+import android.net.Uri
 import android.os.Environment
 import android.os.SystemClock
+import android.text.TextPaint
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
-import androidx.datastore.core.IOException
-import androidx.datastore.core.MultiProcessDataStoreFactory
+import androidx.compose.ui.res.stringResource
+import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
+import androidx.room.withTransaction
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
-import androidx.datastore.core.Serializer
-import androidx.lifecycle.application
-import androidx.room.withTransaction
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.OutputStream
-import kotlin.collections.sortedWith
+import kotlin.concurrent.thread
 import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.transformLatest
+import androidx.core.net.toUri
 
 
-class CompetitorViewModel(application : Application, val dao : CompetitorDao, val database: AppDatabase) : AndroidViewModel(application) {
+class CompetitorViewModel(application : Application, val dao : CompetitorDao, val database: AppDatabase, val mainActivity: MainActivity) : AndroidViewModel(application) {
     val colorPallete : List<Int> = listOf(Color.BLUE, Color.GREEN, Color.RED, Color.BLACK, Color.YELLOW)
     val colorNames : List<String> = listOf("Blue", "Green", "Red", "Black", "Yellow")
     var colorOrder : MutableList<Int> = mutableListOf()
@@ -205,6 +203,32 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
                                 SharingStarted.WhileSubscribed(5_000),
                                 emptyList())
 
+    val datasetInfo : StateFlow<String> =
+        combine(competitorsStateFlow, settings) { competitors, settings ->
+
+            if(competitors.size != 0 && settings != null ) {
+                val started = competitors.filter({ it.started }).size
+                val finished = competitors.filter({ it.finished }).size
+
+                val start_time =
+                    if (settings?.competition_start_time != 0L)
+                        competitors[0].formattedDayTime(settings?.competition_start_time!!)
+                    else ""
+
+
+                var result = application.applicationContext.getString(R.string.databaseInfo)
+                    .format(competitors.size, started, finished)
+                if(start_time != "")
+                    result += application.applicationContext.getString(R.string.competitionStartedAt).format(start_time)
+                result
+            }
+            else {
+                application.applicationContext.getString(R.string.databaseIsEmpty)
+            }
+        }.stateIn(viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            "")
+
 
 
 
@@ -250,6 +274,25 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
 
         var nextid = competitorCount + 1L
         return Competitor(nextid, Bib(0,0), "", main_group_name, 1, 0)
+    }
+
+    fun resetData()
+    {
+        viewModelScope.launch {
+            database.withTransaction {
+                dao.deleteAllCompetitors()
+                dao.deleteAllGroups()
+                dao.deleteAllSettings()
+                val defaultSettings = Settings(1L, 15, 0L)
+                dao.insertSettings(defaultSettings)
+
+                val defaultGroup = Groups(
+                    1L,
+                    application.applicationContext.getString(R.string.main_group_name),
+                )
+                dao.insertGroup(defaultGroup)
+            }
+        }
     }
 
     fun arrangeStartTimes()
@@ -309,16 +352,28 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
             }
         }
         var p =  0
-        var prev_sex = all_results[0].sex;
+        var prev_sex = all_results[0].sex
         var prev_group = all_results[0].group
-        for(item in all_results.withIndex())
+        var winner_splits = 0
+        var winner_ind = 0
+        for((j,item) in all_results.withIndex())
         {
-            if(item.value.sex != prev_sex || item.value.group != prev_group) p = 0
+            if(item.sex != prev_sex || item.group != prev_group) p = 0
             p++
-            item.value.result = p
+            item.result = p
+            if(p == 1) {
+                item.gap = 0L
+                winner_splits = item.splits.size
+                winner_ind = j
+            }
+            else {
+                val finished = item.splits.size == winner_splits
+                item.gap = if(finished) (item.splits.last()- item.startTime) - (all_results[winner_ind].splits.last()-all_results[winner_ind].startTime)
+                           else null
+            }
 
-            prev_sex = item.value.sex
-            prev_group = item.value.group
+            prev_sex = item.sex
+            prev_group = item.group
 
         }
         return all_results.groupBy { competitor -> Pair(competitor.sex, competitor.group) }
@@ -547,91 +602,157 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
         if(settings.value != null) {
             onSettingsUpdated(settings.value!!.copy(competition_start_time = startTime))
         }
+        arrangeStartTimes()
     }
 
-    fun resultPdf(){
-        val pdfDoc = PdfDocument()
-        var page_count = 1
-        var pageinfo = PdfDocument.PageInfo.Builder(842, 595, page_count).create()
-        var pdfPage = pdfDoc.startPage(pageinfo)
-        val titleOffsetX = 100.0f
-        val tableOffsetX = 10.0f
-        val titleOffsetY = 50.0f
-        val titlePaint = Paint()
-        val subTitlePaint = Paint()
-        val textPaint = Paint()
+    fun resultPdf() {
+        thread {
+            val pdfDoc = PdfDocument()
+            var page_count = 1
+            var pageinfo = PdfDocument.PageInfo.Builder(842, 595, page_count).create()
+            var pdfPage = pdfDoc.startPage(pageinfo)
+            val titleOffsetX = 100.0f
+            val tableOffsetX = 10.0f
+            val titleOffsetY = 50.0f
+            val titlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
+            val subTitlePaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
+            val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
+            val backPaint = Paint()
+            val aR = application.resources
 
-        var x = titleOffsetX
-        var y = titleOffsetY
+            var x = titleOffsetX
+            var y = titleOffsetY
 
-        titlePaint.textSize = 24.0f
-        subTitlePaint.textSize = 36.0f
-        textPaint.textSize = 10.0f
-        //titlePaint.measureText("Res") = 36.0f
+            val ts = 10.0f
+            titlePaint.textSize = 24.0f
+            subTitlePaint.textSize = 18.0f
+            textPaint.textSize = ts
+            textPaint.typeface = Typeface.MONOSPACE
+            backPaint.color = Color.LTGRAY
 
-        var canvas = pdfPage.canvas
-
-        canvas.drawText("Results", titleOffsetX, titleOffsetY, titlePaint)
-
-        y += titlePaint.textSize + 2.5f
-        val result = getResults()
-        for( kvpair in result) {
-            val sexname = if (kvpair.key.first == 1) application.resources.getString(R.string.men)
-                          else                       application.resources.getString(R.string.women)
-            y += subTitlePaint.textSize*1.0f
-            canvas.drawText("$sexname group ${kvpair.key.second}", titleOffsetX, y, subTitlePaint)
-            y += subTitlePaint.textSize*0.5f
-            canvas.drawLine(10.0f, y, 400.0f, y, textPaint)
-            y += subTitlePaint.textSize + 0.5f
+            val pageStop = pageinfo.pageWidth.toFloat() - 10
 
 
-            x = tableOffsetX
-            for(c in kvpair.value){
-                Log.d("PDF WRITE", "${c.name}: num $x, $y")
-                canvas.drawText(c.result.toString(), x, y,  textPaint)
-                x += 10
+            //titlePaint.measureText("Res") = 36.0f
 
-                Log.d("PDF WRITE", "${c.name}: name $x, $y")
-                canvas.drawText(c.name, x, y,  textPaint)
-                x += 200
+            val canvas = pdfPage.canvas
 
-                for(s in c.formattedSplitsRaceTime())
-                {
-                    Log.d("PDF WRITE", "${c.name}: $x, $y")
-                    canvas.drawText(s, x, y,  textPaint)
-                    x += 75
-                }
+            canvas.drawText(aR.getString(R.string.to_results), titleOffsetX, titleOffsetY, titlePaint)
+
+            y += titlePaint.textSize + 2.5f
+            val result = getResults()
+            for (kvpair in result) {
+                val sexname =
+                    if (kvpair.key.first == 1) aR.getString(R.string.men)
+                    else aR.getString(R.string.women)
+                y += subTitlePaint.textSize * 1.0f
+                canvas.drawText(
+                    "${aR.getString(R.string.group)} ${kvpair.key.second}, $sexname",
+                    titleOffsetX,
+                    y,
+                    subTitlePaint
+                )
+                y += subTitlePaint.textSize * 0.5f
+                canvas.drawLine(10.0f, y, pageStop, y, textPaint)
+                y += subTitlePaint.textSize + 0.5f
+
+
                 x = tableOffsetX
+                for ((j,c) in kvpair.value.withIndex()) {
+                    if((j + 1) % 2 == 0) {
+                        canvas.drawRect(10.0f, y - ts, pageStop, y + 1.2f*ts, backPaint )
+                    }
+                    Log.d("PDF WRITE", "${c.name}: num $x, $y")
+                    canvas.drawText(c.result.toString(), x, y, textPaint)
+                    x += 10
 
-                y += 15
-                Log.d("PDF WRITE", "${c.name}: $x, $y")
-                if(y > 560)
-                {
-                    pdfDoc.finishPage(pdfPage)
-                    page_count ++
-                    PdfDocument.PageInfo.Builder(842, 595, page_count).create()
-                    pdfPage = pdfDoc.startPage(PdfDocument.PageInfo.Builder(842, 595, page_count).create())
-                    y = titleOffsetY
+                    Log.d("PDF WRITE", "${c.name}: name $x, $y")
+                    canvas.drawText(c.name, x, y, textPaint)
+                    x += 200
+
+                    canvas.drawText(aR.getString(R.string.race_time), x, y, textPaint); y += ts
+                    canvas.drawText(aR.getString(R.string.lap_time), x, y, textPaint);  y-= ts
+                    x+= 50
+
+
+                    val raceSplits = c.formattedSplitsRaceTime()
+                    val lapSplits = c.formattedSplitsLapTime()
+                    for ((i, s) in raceSplits.withIndex()) {
+                        Log.d("PDF WRITE", "${c.name}: $x, $y")
+                        canvas.drawText(s, x, y, textPaint); y += ts
+                        canvas.drawText(lapSplits[i], x, y, textPaint)
+                        y -= ts
+                        x += 75
+                    }
+                    x = tableOffsetX
+
+                    y += 2.5f * ts
+                    Log.d("PDF WRITE", "${c.name}: $x, $y")
+                    if (y > 560) {
+                        pdfDoc.finishPage(pdfPage)
+                        page_count++
+                        PdfDocument.PageInfo.Builder(842, 595, page_count).create()
+                        pdfPage = pdfDoc.startPage(
+                            PdfDocument.PageInfo.Builder(842, 595, page_count).create()
+                        )
+                        y = titleOffsetY
+                    }
                 }
+
+
             }
+            pdfDoc.finishPage(pdfPage)
+
+            getApplication<Application>().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
 
 
+            val myExternalFile =
+                File(
+                    getApplication<Application>().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
+                    "result.pdf"
+                )
+            Log.d("PDF WRITE", "$myExternalFile")
+            val stream = FileOutputStream(myExternalFile)
+            pdfDoc.writeTo(stream)
+            pdfDoc.close()
+
+            val recipients = dao.allEmails().filterNotNull().distinct()
+            val rec_array : Array<String> = Array<String>(recipients.size, {i -> recipients[i]})
+
+
+            val emailSelectorIntent = Intent(Intent.ACTION_SENDTO)
+            emailSelectorIntent.setData("mailto:".toUri())
+
+            val intent = Intent(Intent.ACTION_SEND)
+            //intent.type = "application/octet-stream"
+            intent.data = "mailto:".toUri() // only email apps
+            intent.putExtra(Intent.EXTRA_EMAIL, rec_array); //rec_string.split(',')[0])
+            intent.putExtra(
+                Intent.EXTRA_SUBJECT,
+                application.resources.getString(R.string.to_results)
+            )
+            intent.putExtra(Intent.EXTRA_TEXT, "Competition results")
+
+            intent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(
+                application.applicationContext,
+                "${application.applicationContext.packageName}.fileprovider",
+                myExternalFile
+            ))
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            intent.setSelector( emailSelectorIntent );
+
+            onSendEmails(intent)
         }
-        pdfDoc.finishPage(pdfPage)
-
-        //openFileOutput(file, Context.MODE_PRIVATE)
+    }
 
 
-        //val extpath = getExternalStorageDirectory()
-        getApplication<Application>().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
 
-
-        val myExternalFile =
-            File(getApplication<Application>().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "result.pdf")
-        Log.d("PDF WRITE", "$myExternalFile")
-        val stream = FileOutputStream(myExternalFile )
-        pdfDoc.writeTo(stream)
-        pdfDoc.close()
+    fun onSendEmails(intent : Intent)
+    {
+        viewModelScope.launch {
+            mainActivity.startActivity(intent)
+        }
     }
 
 }

@@ -84,7 +84,7 @@ class MainActivity : ComponentActivity() {
         setTitle("Participants")
 
         this.application
-        val viewModel = CompetitorViewModel(this.application, dao, database)
+        val viewModel = CompetitorViewModel(this.application, dao, database, this)
 
         /*setContent{
             AppTheme {

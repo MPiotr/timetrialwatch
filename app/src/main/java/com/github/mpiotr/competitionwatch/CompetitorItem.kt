@@ -34,7 +34,6 @@ fun CompetitorItem(item : Competitor,
                    onNavigateToEdit : () -> Unit) {
     var name by remember(item.id) { mutableStateOf(item.name) }
     var bib_number by remember(item.id) { mutableStateOf(item.bib) }
-    val fontSize = 14.sp
     LaunchedEffect(item.name) { if (name != item.name) name = item.name }
     LaunchedEffect(item.bib) {
         if (bib_number != item.bib) bib_number = item.bib

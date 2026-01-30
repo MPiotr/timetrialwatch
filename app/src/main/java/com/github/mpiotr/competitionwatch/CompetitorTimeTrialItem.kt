@@ -1,6 +1,7 @@
 package com.github.mpiotr.competitionwatch
 
 import android.os.SystemClock
+import android.view.SoundEffectConstants
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -38,6 +39,7 @@ fun CompetitorTimeTrialItem(item : Competitor, modifier : Modifier, viewModel: C
     var start_time by remember(item.id) {mutableStateOf(item.startTime) }
     var msnow by remember { mutableLongStateOf(0L) }
 
+
     LaunchedEffect(msnow, comp_start_time, item.startTime) {
         msnow = SystemClock.elapsedRealtime()
         start_time = item.startTime
@@ -47,6 +49,7 @@ fun CompetitorTimeTrialItem(item : Competitor, modifier : Modifier, viewModel: C
     LaunchedEffect(item.bib) {   if (bib_number != item.bib) bib_number = item.bib}
     LaunchedEffect(item.started) {   if (started != item.started) started = item.started}
     LaunchedEffect(item.startTime) {   if (start_time != item.startTime) start_time = item.startTime}
+
 
     Row(
         modifier.fillMaxWidth().wrapContentHeight(),
