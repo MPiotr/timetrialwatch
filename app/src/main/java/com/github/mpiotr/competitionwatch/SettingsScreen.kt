@@ -95,7 +95,8 @@ fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : 
             var showResetAlert by remember { mutableStateOf(false) }
             val comps = viewModel.competitorsStateFlow.collectAsState()
             Row {
-                val info_test = stringResource(R.string.databaseInfo).format(comps.value.size)
+                val info_string = viewModel.datasetInfo.collectAsState()
+                val info_test = info_string.value
 
                 Text(info_test, modifier = Modifier.width(300.dp))
                 Spacer(Modifier.width(8.dp))

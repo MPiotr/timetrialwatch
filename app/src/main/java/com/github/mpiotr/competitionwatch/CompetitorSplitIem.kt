@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.delay
@@ -149,7 +150,6 @@ import kotlinx.coroutines.delay
         localCompetitor = null
         localRacePosition = null
     }
-    //Log.d("SPLIT IME", "$splittime, ${splittime -  nowms}")
 
     Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.Top, modifier = Modifier
         .fillMaxWidth()
@@ -201,16 +201,11 @@ import kotlinx.coroutines.delay
             Button(
                 {
                     if (valid_bib && currentItem != null) {
-                        //val item_ind = viewModel.bibIndex[number.value]
                         splittime = SystemClock.elapsedRealtime()
                         viewModel.onSplit(splittime, number.value)
 
                     }
                 },
-                /*colors = ButtonColors(
-                    colorResource(R.color.md_theme_primary),
-                    contentColor = colorResource(R.color.md_theme_onPrimary),
-                    ),*/
                 enabled = split_buttons_enabled,
                 modifier = Modifier
                     .height(75.dp)
@@ -219,7 +214,7 @@ import kotlinx.coroutines.delay
             )
 
             {
-               val text =  if(!isFinishing) "Split" else "Finish"
+               val text =  if(!isFinishing) stringResource(R.string.split)  else stringResource(R.string.finish)
               Text(text, color = colorResource(R.color.md_theme_onPrimary))
             }
         }

@@ -1,49 +1,29 @@
 package com.github.mpiotr.competitionwatch
 
-import android.R.style.Theme
 import android.content.ContentValues
-import android.database.sqlite.SQLiteDatabase
+import android.media.MediaPlayer
+import android.media.SoundPool
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.core.os.bundleOf
-import androidx.navigation.NamedNavArgument
-import androidx.navigation.NavArgs
-import androidx.navigation.NavArgument
-import androidx.navigation.NavArgumentBuilder
-import androidx.navigation.NavDestination
-import androidx.navigation.NavOptions
-import androidx.navigation.NavType
-import androidx.navigation.Navigator
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import androidx.room.OnConflictStrategy
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.compose.AppTheme
-
-import kotlinx.serialization.builtins.LongArraySerializer
 
 
 class MainActivity : ComponentActivity() {
@@ -85,32 +65,9 @@ class MainActivity : ComponentActivity() {
 
         this.application
         val viewModel = CompetitorViewModel(this.application, dao, database, this)
+        val soundPool = SoundPool.Builder().setMaxStreams(1).build()
+        val soundId =  soundPool.load(this, R.raw.racestart_wav, 1)
 
-        /*setContent{
-            AppTheme {
-                val cs = MaterialTheme.colorScheme
-                LaunchedEffect(Unit) {
-                    Log.d("THEME_TRACE", "Main: Primary = ${cs.primary}")
-                    Log.d("THEME_TRACE", "Main: OnPrimary = ${cs.onPrimary}")
-                }
-                Column {
-                    Text(
-                        "PRIMARY",
-                        color = cs.onPrimary,
-                        modifier = Modifier
-                            .background(cs.primary)
-                            .padding(16.dp)
-                    )
-                    Text(
-                        "SURFACE",
-                        color = cs.onSurface,
-                        modifier = Modifier
-                            .background(cs.surface)
-                            .padding(16.dp)
-                    )
-                }
-            }
-        }*/
 
 
         setContent {
@@ -160,6 +117,8 @@ class MainActivity : ComponentActivity() {
                             TimeTrialScreen(
                                 viewModel,
                                 Modifier.padding(paddingValues),
+                                soundPool,
+                                soundId,
                                 { navController.navigate("Competitors") },
                                 { navController.navigate("SplitScreen") })
 

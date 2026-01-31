@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Competition Watch</string>
+    <string name="app_name" translatable="false">Competition Watch</string>
     <string name="main_group_name">Regular</string>
     <string name="men">Men</string>
     <string name="women">Women</string>
@@ -17,7 +17,7 @@
     <string name="next_participants_to_start">Next participant to start</string>
     <string name="not_yet_finished">%1$d competitors are not yet finished</string>
     <string name="stop_race">Stop Competitions</string>
-    <string name="databaseInfo">The database contains %1$d competitors, %1$d started and %1$d finished</string>
+    <string name="databaseInfo">The database contains %1$d competitors, %2$d started and %3$d finished</string>
     <string name="reset_data">Reset data</string>
     <string name="reset_data_title">Reset database?</string>
     <string name="race_time">race</string>
@@ -28,4 +28,6 @@
     <string name="bib_color">Bib\'s color</string>
     <string name="databaseIsEmpty">The database is empty</string>
     <string name="competitionStartedAt">The competition started %1$s</string>
+    <string name="finish">Finish</string>
+    <string name="split">Split</string>
 </resources>

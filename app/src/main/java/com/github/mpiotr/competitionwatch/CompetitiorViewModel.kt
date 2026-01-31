@@ -7,13 +7,15 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
-import android.net.Uri
 import android.os.Environment
 import android.os.SystemClock
 import android.text.TextPaint
 import android.util.Log
-import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
@@ -26,9 +28,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -38,7 +38,6 @@ import java.io.File
 import java.io.FileOutputStream
 import kotlin.concurrent.thread
 import kotlin.time.Duration.Companion.milliseconds
-import androidx.core.net.toUri
 
 
 class CompetitorViewModel(application : Application, val dao : CompetitorDao, val database: AppDatabase, val mainActivity: MainActivity) : AndroidViewModel(application) {
@@ -424,8 +423,6 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
         )
     }
 
-    val _racePositionCompleteRevision = MutableStateFlow(0L)
-    val racePositionCompleteRevision = _racePositionCompleteRevision.asStateFlow()
 
     sealed interface RacePositionUiState {
         object Calculating : RacePositionUiState
@@ -433,120 +430,7 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
     }
 
 
-    val racePositionCompleted : StateFlow<RacePositionUiState> =
-        combine(currentItem,
-            competitorsStateFlow,
-            minRevision
-             ) { current, all, minrev ->
-            RacePositionUiState.Calculating
-        }.flatMapLatest { combine(currentItem,
-            competitorsStateFlow,
-            minRevision
-        ) { current, all, minrev ->
-            val competitor = current
-            if (competitor == null || competitor.revision < minrev ) {
-                Log.d("RACE POSITION CALCULATION", "Rejected")
-                RacePositionUiState.Calculating
-            } else {
-                val splits = competitor.splits
-                val splitIndex = splits.size - 1
-                Log.d("RACE POSITION CALCULATION", splitIndex.toString())
-
-                try {
-                    val allSplits =
-                        all.map { item ->
-                            if (item.splits.size > splitIndex && item.sex == competitor.sex && item.group == competitor.group) {
-                                Pair((item.splits[splitIndex] - item.startTime), item)
-                            } else
-                                null
-                        }.mapNotNull { item -> item }.sortedBy { it.first }
-
-
-                    var position = 0
-                    var found = false
-                    for (i in 0..<allSplits.size) {
-                        if (allSplits[i].second.id == competitor.id) {
-                            found = true
-                            if (allSplits[i].second.revision < minrev)
-                                found = false
-                            break
-                        }
-                        position++
-                    }
-                    if (found) {
-                        val leader = if (position > 0) allSplits[position - 1] else null
-                        val chaser =
-                            if (position + 1 < allSplits.size) allSplits[position + 1] else null
-                        Log.d(
-                            "ALLSPLITS",
-                            "Leader: ${leader?.second?.name}, size = ${leader?.second?.splits?.size}, ${leader?.second?.revision}"
-                        )
-                        Log.d(
-                            "ALLSPLITS",
-                            "Chaser: ${chaser?.second?.name}, size = ${chaser?.second?.splits?.size}, ${chaser?.second?.revision}"
-                        )
-                        RacePositionUiState.Data(RacePositionItems(position + 1, leader, chaser, allSplits.size))
-                    } else
-                         RacePositionUiState.Calculating
-                } catch (e: Exception) {
-                     RacePositionUiState.Calculating
-                }
-            }
-        }
-    }.filterNotNull().stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue =  RacePositionUiState.Calculating
-        )
-
-/*
-    fun racePositionCompleted(bib : Bib, splitIndex : Int) : StateFlow<RacePositionItems?> {
-        return flow {
-            val competitor = dao.getCompetitor(bib.bib_number, bib.bib_color).first()
-            val splits = competitor.splits
-
-            if (splitIndex > splits.size) {
-
-                emit(RacePositionItems(-1, null, null, -1))
-            }
-
-            val allSplits =
-                dao.getAll().first().map { item ->
-                    if (item.splits.size > splitIndex && item.sex == competitor.sex && item.group == competitor.group)
-                        Pair((item.splits[splitIndex] - item.startTime), item)
-                    else
-                        null
-                }.mapNotNull { item -> item }.sortedBy { it.first }
-
-            var position = 0
-            var found = false
-            for (i in 0..<allSplits.size) {
-                if (allSplits[i].second.bib == bib) {
-                    found = true
-                    break
-                }
-                position++
-            }
-
-            if(!found) emit(RacePositionItems(-1, null, null, -1))
-
-            /*Log.d("SPLITS (C):", "split index = $splitIndex")
-            for(c in allSplits) {
-                Log.d("SPLITS (C):", "${c.first}: ${c.second}")
-            }*/
-
-            val leader = if (position > 0) allSplits[position - 1].second else null
-            val chaser = if (position + 1 < allSplits.size) allSplits[position + 1].second else null
-
-            emit( RacePositionItems(position + 1, leader, chaser, allSplits.size))
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = null
-        )
-    }*/
-
-    val racePositionLive :  StateFlow<Pair<Competitor, RacePositionItems>?> =
+      val racePositionLive :  StateFlow<Pair<Competitor, RacePositionItems>?> =
         combine(currentItem, timeFlow, competitorsStateFlow) { competitor, msnow, all ->
             if(competitor == null ) {
                 null
@@ -603,6 +487,17 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
             onSettingsUpdated(settings.value!!.copy(competition_start_time = startTime))
         }
         arrangeStartTimes()
+    }
+
+    var startSoundPlaying by mutableStateOf(false)
+        private set
+    fun onSoundStart()
+    {
+        startSoundPlaying = true
+        viewModelScope.launch {
+            delay(4000)
+            startSoundPlaying = false
+        }
     }
 
     fun resultPdf() {

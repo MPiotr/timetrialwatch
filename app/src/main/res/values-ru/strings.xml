@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Competition Watch</string>
     <string name="main_group_name">Основная</string>
     <string name="men">Мужчины</string>
     <string name="women">Женщины</string>
@@ -18,15 +17,17 @@
     <string name="next_participants_to_start">Следующие стартуют</string>
     <string name="not_yet_finished">%1$d участников не финишировали</string>
     <string name="stop_race">Закончить соревнования</string>
-    <string name="databaseInfo">The database contains %1$d competitors.</string>
-    <string name="reset_data">Reset data</string>
-    <string name="reset_data_title">Reset database?</string>
-    <string name="race_time">race</string>
-    <string name="lap_time">lap</string>
-    <string name="sex">sex</string>
-    <string name="man">Man</string>
-    <string name="woman">Woman</string>
-    <string name="bib_color">Bib\'s color</string>
-    <string name="databaseIsEmpty">The database is empty</string>
+    <string name="databaseInfo">База данных содержит %1$d участников,  %2$d стартовали и %3$d  финишировали</string>
+    <string name="reset_data">Удалить всё</string>
+    <string name="reset_data_title">Вы уверены, что хотите удалить данные?</string>
+    <string name="race_time">гонка</string>
+    <string name="lap_time">круг</string>
+    <string name="sex">пол</string>
+    <string name="man">Муж</string>
+    <string name="woman">Жен</string>
+    <string name="bib_color">Цвет номера</string>
+    <string name="databaseIsEmpty">База данных пуста</string>
     <string name="competitionStartedAt">The competition started %1$s</string>
+    <string name="finish">Finish</string>
+    <string name="split">Split</string>
 </resources>

@@ -1,7 +1,7 @@
 package com.github.mpiotr.competitionwatch
 
 import android.os.SystemClock
-import android.view.SoundEffectConstants
+import android.util.Log
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
 @Composable
-fun CompetitorTimeTrialItem(item : Competitor, modifier : Modifier, viewModel: CompetitorViewModel)
+fun CompetitorTimeTrialItem(item : Competitor, modifier : Modifier, viewModel: CompetitorViewModel, onAudioEvent : ()->Unit)
 {
     val trial_started by viewModel.timeTrialStarted.collectAsState()
     val comp_start_time by viewModel.startTime.collectAsState()
@@ -70,8 +70,13 @@ fun CompetitorTimeTrialItem(item : Competitor, modifier : Modifier, viewModel: C
                        Modifier.wrapContentWidth().padding(8.dp)
                     )
                 {
-                    val timeToStart = item.timeBeforeStart(msnow, comp_start_time)
-                    Text("Start in \n $timeToStart", Modifier)
+                    val timeToStartString = item.timeBeforeStart(msnow, comp_start_time)
+                    /*Log.d("TIMING", "${item.formattedDayTime(msnow)}, " +
+                            "${item.formattedDayTime(item.startTime )}, " +
+                            "${item.formattedDayTime(comp_start_time )},")*/
+                    val timeToStartMs = -(msnow - item.startTime - comp_start_time)
+                    if(  timeToStartMs < 4000 && timeToStartMs > 0 ) onAudioEvent()
+                    Text("Start in \n $timeToStartString", Modifier)
                 }
             } else {
                 Text("Competitor has started", Modifier)
