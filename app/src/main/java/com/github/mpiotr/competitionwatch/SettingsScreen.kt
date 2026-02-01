@@ -94,44 +94,41 @@ fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : 
             val groups = viewModel.groups.collectAsState()
             var showResetAlert by remember { mutableStateOf(false) }
             val comps = viewModel.competitorsStateFlow.collectAsState()
-            Row {
-                val info_string = viewModel.datasetInfo.collectAsState()
-                val info_test = info_string.value
+            val info_string = viewModel.datasetInfo.collectAsState()
+            val info_test = info_string.value
 
-                Text(info_test, modifier = Modifier.width(300.dp))
-                Spacer(Modifier.width(8.dp))
-                Button({showResetAlert = true}, modifier = Modifier.weight(1.0f)) { Text(stringResource(R.string.reset_data)) }
-                    if (showResetAlert)
-                    {
-                        AlertDialog( {showResetAlert = false},
-                            confirmButton = {
-                                Button({
-                                    showResetAlert = false
-                                    viewModel.resetData()
-                                }
+            Text(info_test, modifier = Modifier.fillMaxWidth())
+            Button({showResetAlert = true}) { Text(stringResource(R.string.reset_data)) }
+                if (showResetAlert)
+                {
+                    AlertDialog( {showResetAlert = false},
+                        confirmButton = {
+                            Button({
+                                showResetAlert = false
+                                viewModel.resetData()
+                            }
 
-                                    ) {Text("Yes")} },
-                            dismissButton = {Button({showResetAlert = false}, ) {Text("No")} },
-                            title = {Text(stringResource(R.string.reset_data_title))}
-                        )
-                    }
-
+                                ) {Text("Yes")} },
+                        dismissButton = {Button({showResetAlert = false}, ) {Text("No")} },
+                        title = {Text(stringResource(R.string.reset_data_title))}
+                    )
                 }
+
+
 
             HorizontalDivider(modifier = Modifier.padding(4.dp, 9.dp))
 
+            var local_start_interval by remember{mutableStateOf(15)}
             TextField(
-                settings.value!!.start_interval_seconds.toString(),
+                local_start_interval.toString(),
                 { updated ->
-                    settings.value!!.copy(
-                        start_interval_seconds = updated.toIntOrNull() ?: 15
-                    )
+                    local_start_interval = updated.toIntOrNull() ?: 15
                 },
 
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 label = { Text("Starting interval, s") },
                 modifier = Modifier.onFocusChanged(
-                    { viewModel.onSettingsUpdated(settings.value!!) })
+                    { viewModel.onSettingsUpdated(settings.value!!.copy(start_interval_seconds = local_start_interval)) })
                     .fillMaxWidth().padding(top = 16.dp)
             )
             Spacer(Modifier.height(8.dp))

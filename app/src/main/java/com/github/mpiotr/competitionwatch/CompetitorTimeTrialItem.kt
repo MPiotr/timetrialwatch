@@ -75,7 +75,7 @@ fun CompetitorTimeTrialItem(item : Competitor, modifier : Modifier, viewModel: C
                             "${item.formattedDayTime(item.startTime )}, " +
                             "${item.formattedDayTime(comp_start_time )},")*/
                     val timeToStartMs = -(msnow - item.startTime - comp_start_time)
-                    if(  timeToStartMs < 4000 && timeToStartMs > 0 ) onAudioEvent()
+                    if(  timeToStartMs < 3000 && timeToStartMs > 0 ) onAudioEvent()
                     Text("Start in \n $timeToStartString", Modifier)
                 }
             } else {

@@ -297,15 +297,17 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
     fun arrangeStartTimes()
     {
         viewModelScope.launch {
+            val start_time = settings.value?.competition_start_time ?: 0L
             val start_interval = settings.value!!.start_interval_seconds
             val arranged = competitorsStateFlow.value.sortedWith { a, b ->
                 if (a.group != b.group)
                     _groupIndex[a.group]?.minus(_groupIndex[b.group] ?: 0) ?: 0
                 else if (a.sex != b.sex) -a.sex + b.sex
                 else a.bib.compareTo(b.bib)
-            }.mapIndexed { index, competitor ->
-                if (!competitor.started)
-                    competitor.copy(startTime = index * 1000L * start_interval + 30000)
+            }.filter({!it.started}).mapIndexed { index, competitor ->
+                if (!competitor.started && start_time == 0L) {
+                        competitor.copy(startTime = index * 1000L * start_interval + 30000)
+                }
                 else competitor
             }
             dao.updateAll(arranged)
@@ -486,7 +488,6 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
         if(settings.value != null) {
             onSettingsUpdated(settings.value!!.copy(competition_start_time = startTime))
         }
-        arrangeStartTimes()
     }
 
     var startSoundPlaying by mutableStateOf(false)

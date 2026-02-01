@@ -94,7 +94,7 @@ class MainActivity : ComponentActivity() {
                                         navController.navigate("AddCompetitor")
                                 },
                                 {
-                                    if(viewModel.timeTrialStarted.value) viewModel.arrangeStartTimes() // Only for late-registered competitors, normally on start button
+                                    viewModel.arrangeStartTimes() // Only for late-registered competitors, normally on start button
                                     navController.navigate("TimeTrial")
                                 })
                         }
