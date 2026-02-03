@@ -25,7 +25,7 @@ fun makeResultPDF(viewModel: CompetitorViewModel, application : Application, onS
 
         val pdfDoc = PdfDocument()
         var page_count = 1
-        var pageinfo = PdfDocument.PageInfo.Builder(842, 595, page_count).create()
+        val pageinfo = PdfDocument.PageInfo.Builder(842, 595, page_count).create()
         var pdfPage = pdfDoc.startPage(pageinfo)
         val titleOffsetX = 100.0f
         val tableOffsetX = 10.0f
@@ -48,8 +48,6 @@ fun makeResultPDF(viewModel: CompetitorViewModel, application : Application, onS
 
         val pageStop = pageinfo.pageWidth.toFloat() - 10
 
-
-        //titlePaint.measureText("Res") = 36.0f
 
         val canvas = pdfPage.canvas
 

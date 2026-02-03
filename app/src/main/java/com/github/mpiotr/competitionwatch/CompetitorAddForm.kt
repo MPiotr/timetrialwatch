@@ -97,7 +97,7 @@ fun CompetitorAddForm(item : Competitor, viewModel: CompetitorViewModel, context
                     if (num.length > 0) {
                         try {
                             bib = Bib(num.toInt(), bib.bib_color)
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
                             Log.w("CompetitorItem.kt", "Error on string to Int")
                         }
                     }

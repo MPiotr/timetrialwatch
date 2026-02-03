@@ -35,7 +35,7 @@ import com.github.mpiotr.competitionwatch.dataset.Competitor
                    onNavigateToAdd : ()->Unit,
                    onNavigateToTimeTrial : ()->Unit)
 {
-    val competitors by viewModel.competitorsStateFlow.collectAsState();
+    val competitors by viewModel.competitorsStateFlow.collectAsState()
 
     Scaffold(modifier = modifier.fillMaxSize(),
         topBar = {
@@ -85,7 +85,6 @@ import com.github.mpiotr.competitionwatch.dataset.Competitor
                     CompetitorListItem(
                         competitor,
                         viewModel,
-                        item_color = Pair(0, "Black"),
                         comp_start_time= viewModel.startTime.collectAsState().value,
                         onNavigateToEdit = onNavigateToAdd,
                         modifier = Modifier.background(if(ind % 2 == 0)

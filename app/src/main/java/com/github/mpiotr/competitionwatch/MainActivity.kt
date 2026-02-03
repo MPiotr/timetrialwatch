@@ -42,11 +42,11 @@ class MainActivity : ComponentActivity() {
                 cv.put("name", getString(R.string.main_group_name))
                 cv.put("num_splits_men", 4)
                 cv.put("num_splits_women", 4)
-                db?.insert("groups", OnConflictStrategy.REPLACE,cv)
+                db.insert("groups", OnConflictStrategy.REPLACE,cv)
                 cv.clear()
                 cv.put("start_interval_seconds", 15)
                 cv.put("competition_start_time", 0L)
-                db?.insert("info", OnConflictStrategy.REPLACE,cv)
+                db.insert("info", OnConflictStrategy.REPLACE,cv)
             }
 
             /*fun onOpen(db: SupportSQLiteDatabase?) {
@@ -65,7 +65,7 @@ class MainActivity : ComponentActivity() {
         setTitle("Participants")
 
         this.application
-        val viewModel = CompetitorViewModel(this.application, dao, database, this)
+        val viewModel = CompetitorViewModel(this.application, dao, database)
         val soundPool = SoundPool.Builder().setMaxStreams(1).build()
         val soundId =  soundPool.load(this, R.raw.racestart_wav, 1)
 

@@ -30,4 +30,7 @@
     <string name="competitionStartedAt">The competition started %1$s</string>
     <string name="finish">Finish</string>
     <string name="split">Split</string>
+    <string name="coming_to_split">отсечка %1$d</string>
+    <string name="no_number">No such number/not started</string>
+    <string name="first_at_this_split">First at this split of %1$d completed</string>
 </resources>

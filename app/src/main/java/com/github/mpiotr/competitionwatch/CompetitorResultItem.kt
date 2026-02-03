@@ -51,19 +51,3 @@ fun CompetitorResultItem(competitor: Competitor, index : Int) {
     }
 }
 
-@Composable
-fun CompetitorResultItemHead (){
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    Row(Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp))
-    {
-        Text("Result")
-        Text("Name", modifier = Modifier.width(100.dp))
-        Text("Start Time")
-        Text("Splits")
-
-        Text("", modifier = Modifier.weight(1.0f))
-
-    }
-}
-

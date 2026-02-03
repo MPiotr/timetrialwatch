@@ -43,7 +43,10 @@ import kotlin.concurrent.thread
 import kotlin.time.Duration.Companion.milliseconds
 
 
-class CompetitorViewModel(application : Application, val dao : CompetitorDao, val database: AppDatabase, val mainActivity: MainActivity) : AndroidViewModel(application) {
+class CompetitorViewModel(application : Application,
+                          val dao : CompetitorDao,
+                          val database: AppDatabase
+                          ) : AndroidViewModel(application) {
     val colorPallete : List<Int> = listOf(Color.BLUE, Color.GREEN, Color.RED, Color.BLACK, Color.YELLOW)
     val colorNames : List<String> = listOf("Blue", "Green", "Red", "Black", "Yellow")
     var colorOrder : MutableList<Int> = mutableListOf()
@@ -133,13 +136,7 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
 
     }
 
-    val _currentSplit = MutableStateFlow(0)
-    val currentSplit = _currentSplit.asStateFlow()
-    fun selectSplit(i : Int) {
-        _currentSplit.value = i
-    }
-
-    val notYetFinished = dao.getAll()
+     val notYetFinished = dao.getAll()
              .map { all ->
                  all.mapNotNull { one ->
                      if (one.started && !one.finished)
@@ -182,10 +179,6 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
 
     }
 
-    private var maxBibNumber : StateFlow<Int>  = dao.max_bib_number().stateIn(viewModelScope,
-        SharingStarted.WhileSubscribed(5_000),
-        0)
-
 
     val settings : StateFlow<Settings?> = dao.settings().stateIn(
         viewModelScope,
@@ -217,8 +210,8 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
                 val finished = competitors.filter({ it.finished }).size
 
                 val start_time =
-                    if (settings?.competition_start_time != 0L)
-                        competitors[0].formattedDayTime(settings?.competition_start_time!!)
+                    if (settings.competition_start_time != 0L)
+                        competitors[0].formattedDayTime(settings.competition_start_time!!)
                     else ""
 
 
@@ -278,7 +271,7 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
 
     fun newCompetitor() : Competitor {
 
-        var nextid = competitorCount + 1L
+        val nextid = competitorCount + 1L
         return Competitor(nextid, Bib(0, 0), "", main_group_name, 1, 0)
     }
 
@@ -417,28 +410,6 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
         }
     }
 
-    fun splitsSlice(splitIndex : Int) : StateFlow<List<Pair<Long, Int>?>> {
-        return competitorsStateFlow.map{ competitors ->
-            competitors.mapIndexed { index, item ->
-                if(item.splits.size > splitIndex)
-                    Pair(item.splits[splitIndex] - item.startTime, index)
-                else
-                    null
-            }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
-    }
-
-
-    sealed interface RacePositionUiState {
-        object Calculating : RacePositionUiState
-        data class Data(val value: RacePositionItems) : RacePositionUiState
-    }
-
-
     fun racePositionLive(id:Int) :  StateFlow<Pair<Competitor, RacePositionItems>?> {
         return  combine(currentItem(id), timeFlow, competitorsStateFlow) { competitor, msnow, all ->
             if (competitor == null) {
@@ -536,7 +507,7 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
                 )
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                intent.selector = emailSelectorIntent;
+                intent.selector = emailSelectorIntent
 
                 onSendEmails(intent)
             }
@@ -548,8 +519,7 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
     fun onSendEmails(intent : Intent)
     {
         viewModelScope.launch {
-            mainActivity.startActivity(intent)
+            application.startActivity(intent)
         }
     }
-
 }

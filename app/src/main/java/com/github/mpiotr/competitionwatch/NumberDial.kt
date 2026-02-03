@@ -52,7 +52,7 @@ fun NumberDial(onNumberChanged : (Bib)->Unit,
         val butC = view.findViewById<Button>(R.id.buttonC)
 
         butX.setOnClickListener {
-            number.intValue = 0 ;
+            number.intValue = 0
             onNumberChanged(Bib(number.intValue, color.intValue))}
         butC.setOnClickListener { number.intValue /= 10
             onNumberChanged(Bib(number.intValue, color.intValue))

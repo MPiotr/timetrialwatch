@@ -29,7 +29,6 @@ import com.github.mpiotr.competitionwatch.dataset.Competitor
 fun CompetitorListItem(item : Competitor,
                        viewModel: CompetitorViewModel,
                        modifier : Modifier = Modifier,
-                       item_color: Pair<Int, String>,
                        comp_start_time: Long = 0,
                        onNavigateToEdit : () -> Unit) {
     var name by remember(item.id) { mutableStateOf(item.name) }

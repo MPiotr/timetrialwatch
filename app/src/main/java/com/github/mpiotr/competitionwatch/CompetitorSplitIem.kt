@@ -73,7 +73,7 @@ import kotlinx.coroutines.delay
                 competitorNameView.textAlignment = View.TEXT_ALIGNMENT_TEXT_START
                 competitorTimeView.text = competitor.formattedRaceTime(nowMs)
                 splitView.visibility = View.VISIBLE
-                splitView.text = "Coming to split ${split_index + 1}"
+                splitView.text = view.context.getString(R.string.coming_to_split).format(split_index + 1)
                 if(racePosition!!.leader != null)
                 {
                     leaderNameView.visibility= View.VISIBLE
@@ -88,7 +88,7 @@ import kotlinx.coroutines.delay
                     }
                     else {
                         leaderNameView.visibility= View.VISIBLE
-                        leaderNameView.text = "First at this split (${racePosition.numCompleted} completed)"
+                        leaderNameView.text = view.context.getString(R.string.first_at_this_split).format(racePosition.numCompleted)
                         leaderTimeView.visibility= View.GONE
                     }
                 }
@@ -105,7 +105,7 @@ import kotlinx.coroutines.delay
 
             }
             else {
-                competitorNameView.text = "No number or Not started"
+                competitorNameView.text = view.context.getString(R.string.no_number)
                 competitorNameView.textAlignment = View.TEXT_ALIGNMENT_CENTER
                 competitorTimeView.visibility = View.GONE
                 chaserNameView.visibility = View.GONE
@@ -125,11 +125,10 @@ import kotlinx.coroutines.delay
     var splittime by remember { mutableLongStateOf(0L) }
     var splitindex_local by remember { mutableStateOf(0) }
     var isFinishing by remember { mutableStateOf(false) }
-    var number = remember { mutableStateOf(Bib(0, 0))}
+    val number = remember { mutableStateOf(Bib(0, 0))}
     var localRacePosition by remember { mutableStateOf< RacePositionItems?>(null) }
     var localCompetitor by remember { mutableStateOf<Competitor?>(null) }
     val currentItem by viewModel.currentItem(id).collectAsStateWithLifecycle()
-    val currentBib by viewModel.currentBib(id).collectAsState()
 
 
 
@@ -146,8 +145,7 @@ import kotlinx.coroutines.delay
     isFinishing = false
     if(splittime != 0L && nowms - splittime > 1000) {
         splittime = 0
-        viewModel.selectSplit(0)
-        number.value = Bib(0, 0);
+        number.value = Bib(0, 0)
         viewModel.selectBib(number.value, id)
         localCompetitor = null
         localRacePosition = null
