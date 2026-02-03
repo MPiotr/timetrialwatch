@@ -1,6 +1,7 @@
 package com.github.mpiotr.competitionwatch
 
 import android.app.Application
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
@@ -8,6 +9,9 @@ import android.graphics.pdf.PdfDocument
 import android.os.Environment
 import android.text.TextPaint
 import android.util.Log
+import androidx.core.content.FileProvider
+import androidx.core.net.toUri
+import androidx.lifecycle.application
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.time.Duration.Companion.milliseconds
@@ -76,11 +80,9 @@ fun makeResultPDF(viewModel: CompetitorViewModel, application : Application, onS
                 if ((j + 1) % 2 == 0) {
                     canvas.drawRect(10.0f, y - ts, pageStop, y + 1.2f * ts, backPaint)
                 }
-                Log.d("PDF WRITE", "${c.name}: num $x, $y")
                 canvas.drawText(c.result.toString(), x, y, textPaint)
                 x += 10
 
-                Log.d("PDF WRITE", "${c.name}: name $x, $y")
                 canvas.drawText(c.name, x, y, textPaint)
                 x += 200
 
@@ -92,7 +94,6 @@ fun makeResultPDF(viewModel: CompetitorViewModel, application : Application, onS
                 val raceSplits = c.formattedSplitsRaceTime()
                 val lapSplits = c.formattedSplitsLapTime()
                 for ((i, s) in raceSplits.withIndex()) {
-                    Log.d("PDF WRITE", "${c.name}: $x, $y")
                     canvas.drawText(s, x, y, textPaint); y += ts
                     canvas.drawText(lapSplits[i], x, y, textPaint)
                     y -= ts
@@ -101,7 +102,6 @@ fun makeResultPDF(viewModel: CompetitorViewModel, application : Application, onS
                 x = tableOffsetX
 
                 y += 2.5f * ts
-                Log.d("PDF WRITE", "${c.name}: $x, $y")
                 if (y > 560) {
                     pdfDoc.finishPage(pdfPage)
                     page_count++
@@ -125,7 +125,6 @@ fun makeResultPDF(viewModel: CompetitorViewModel, application : Application, onS
                 application.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
                 "result.pdf"
             )
-        Log.d("PDF WRITE", "$myExternalFile")
         val stream = FileOutputStream(myExternalFile)
         pdfDoc.writeTo(stream)
         pdfDoc.close()
@@ -134,33 +133,32 @@ fun makeResultPDF(viewModel: CompetitorViewModel, application : Application, onS
 
 
 }
-/*
-        val recipients = dao.allEmails().filterNotNull().distinct()
-        val rec_array : Array<String> = Array<String>(recipients.size, {i -> recipients[i]})
 
+fun getEmailIntent(file : File, recipients : List<String>, application : Application) : Intent {
+    val rec_array = Array(recipients.size, { i -> recipients[i] })
 
-        val emailSelectorIntent = Intent(Intent.ACTION_SENDTO)
-        emailSelectorIntent.setData("mailto:".toUri())
+    val emailSelectorIntent = Intent(Intent.ACTION_SENDTO)
+    emailSelectorIntent.setData("mailto:".toUri())
 
-        val intent = Intent(Intent.ACTION_SEND)
-        //intent.type = "application/octet-stream"
-        intent.data = "mailto:".toUri() // only email apps
-        intent.putExtra(Intent.EXTRA_EMAIL, rec_array); //rec_string.split(',')[0])
-        intent.putExtra(
-            Intent.EXTRA_SUBJECT,
-            application.resources.getString(R.string.to_results)
-        )
-        intent.putExtra(Intent.EXTRA_TEXT, "Competition results")
-
-        intent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(
+    val intent = Intent(Intent.ACTION_SEND)
+    intent.data = "mailto:".toUri() // only email apps
+    intent.putExtra(Intent.EXTRA_EMAIL, rec_array)
+    intent.putExtra(
+        Intent.EXTRA_SUBJECT,
+        application.resources.getString(R.string.to_results)
+    )
+    intent.putExtra(Intent.EXTRA_TEXT, "Competition results")
+    intent.putExtra(
+        Intent.EXTRA_STREAM, FileProvider.getUriForFile(
             application.applicationContext,
             "${application.applicationContext.packageName}.fileprovider",
-            myExternalFile
-        ))
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-        intent.setSelector( emailSelectorIntent );
+            file
+        )
+    )
+    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    intent.selector = emailSelectorIntent
 
-        onSendEmails(intent)
-    }
-*/
+    return intent
+}

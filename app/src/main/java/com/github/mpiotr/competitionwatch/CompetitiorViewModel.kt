@@ -3,14 +3,13 @@ package com.github.mpiotr.competitionwatch
 
 import android.app.Application
 import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.graphics.Color
 import android.os.SystemClock
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.core.content.FileProvider
-import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
@@ -30,12 +29,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.collections.getOrPut
@@ -97,7 +99,7 @@ class CompetitorViewModel(application : Application,
 
 
     val timeFlow =  flow { while(true) {
-        emit(SystemClock.elapsedRealtime())
+        emit(System.currentTimeMillis())
         delay(200)
     } }.stateIn(
         viewModelScope,
@@ -114,7 +116,11 @@ class CompetitorViewModel(application : Application,
         )
     }
     val minRevision = MutableStateFlow(0L)
-    fun selectBib(bib : Bib, id : Int) {
+    fun isBibAlreadySelected(bib : Bib)  = _currentBib.map{ bibs -> bibs.containsValue(bib)}.stateIn( viewModelScope,
+        SharingStarted.WhileSubscribed(1_000),
+        false)
+
+    fun selectBib(bib : Bib, id : Int)  {
         _currentBib.update { old -> old + (id to bib) }
         minRevision.value = 0L
     }
@@ -294,10 +300,16 @@ class CompetitorViewModel(application : Application,
         }
     }
 
+    val _preStartUpdateComplete = MutableStateFlow(true)
+    val startTimeReady : StateFlow<Boolean> = _preStartUpdateComplete.stateIn(viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        true)
+
     fun arrangeStartTimes()
-    {
+    {   _preStartUpdateComplete.value = false
         viewModelScope.launch {
-            val start_time = settings.value?.competition_start_time ?: 0L
+
+            val comp_start_time = settings.value?.competition_start_time ?: 0L
             val start_interval = settings.value!!.start_interval_seconds
             val arranged = competitorsStateFlow.value.sortedWith { a, b ->
                 if (a.group != b.group)
@@ -305,8 +317,9 @@ class CompetitorViewModel(application : Application,
                 else if (a.sex != b.sex) -a.sex + b.sex
                 else a.bib.compareTo(b.bib)
             }.filter({!it.started}).mapIndexed { index, competitor ->
-                if (!competitor.started && start_time == 0L) {
+                if (!competitor.started && competitor.startTime == 0L) {
                         competitor.copy(startTime = index * 1000L * start_interval + 30000)
+
                 }
                 else competitor
             }
@@ -322,7 +335,7 @@ class CompetitorViewModel(application : Application,
 
             colorOrder = colorMap.map { Pair(it.value, it.key) }
                 .sortedByDescending { it.first }.map{it.second}.toMutableList()
-
+            _preStartUpdateComplete.value = true
         }
     }
 
@@ -348,10 +361,11 @@ class CompetitorViewModel(application : Application,
             else {
                 if (a.finished != b.finished) {
                     if (a.finished) -1 else 1
-                } else if (a.splits.size != b.splits.size) a.splits.size - b.splits.size
+                } else if (a.splits.size != b.splits.size) b.splits.size - a.splits.size
                 else ((a.splits.last() - a.startTime) - (b.splits.last() - b.startTime)).toInt()
             }
         }
+        if(all_results.isEmpty()) return emptyMap()
         var p =  0
         var prev_sex = all_results[0].sex
         var prev_group = all_results[0].group
@@ -388,9 +402,10 @@ class CompetitorViewModel(application : Application,
             database.withTransaction {
                 val item: Competitor = dao.getCompetitor(bib.bib_number, bib.bib_color).first()
                 val group : Groups = dao.getGroup(item.group).first()
-                Log.d("ITEMUPDATE", "!")
                 val nextRevision = item.revision + 1
                 minRevision.value = nextRevision
+
+                if(!item.splits.isEmpty() &&  splitTime - item.splits.last() < 3000) return@withTransaction // Sanity check
 
                 val updated_splits =
                     (item.splits + splitTime).toMutableList()
@@ -480,38 +495,12 @@ class CompetitorViewModel(application : Application,
     fun sendResultPDF() {
         thread {
             makeResultPDF(this, application ) { file ->
-
                 val recipients = dao.allEmails().distinct()
-                val rec_array = Array(recipients.size, { i -> recipients[i] })
-
-                val emailSelectorIntent = Intent(Intent.ACTION_SENDTO)
-                emailSelectorIntent.setData("mailto:".toUri())
-
-                val intent = Intent(Intent.ACTION_SEND)
-                intent.data = "mailto:".toUri() // only email apps
-                intent.putExtra(Intent.EXTRA_EMAIL, rec_array)
-                intent.putExtra(
-                    Intent.EXTRA_SUBJECT,
-                    application.resources.getString(R.string.to_results)
-                )
-                intent.putExtra(Intent.EXTRA_TEXT, "Competition results")
-                intent.putExtra(
-                    Intent.EXTRA_STREAM, FileProvider.getUriForFile(
-                        application.applicationContext,
-                        "${application.applicationContext.packageName}.fileprovider",
-                        file
-                    )
-                )
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                intent.selector = emailSelectorIntent
-
+                val intent = getEmailIntent(file, recipients, application)
                 onSendEmails(intent)
             }
         }
     }
-
-
 
     fun onSendEmails(intent : Intent)
     {

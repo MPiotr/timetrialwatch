@@ -43,7 +43,6 @@ fun NumberDial(onNumberChanged : (Bib)->Unit,
             pair.value.setOnClickListener {
                 val newNumber =  pair.index + number.intValue*10
                 number.intValue = newNumber
-                Log.d("NumberDial", "call ${pair.index}new number = ${number.intValue}($newNumber)")
                 onNumberChanged(Bib(number.intValue, color.intValue))
             }
         }

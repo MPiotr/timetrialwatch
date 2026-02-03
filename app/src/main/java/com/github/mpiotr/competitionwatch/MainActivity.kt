@@ -28,8 +28,6 @@ import com.github.mpiotr.competitionwatch.dataset.CompetitorDao
 
 
 class MainActivity : ComponentActivity() {
-    //private lateinit var competitors : MutableList<Competitor>
-
     private lateinit var database : AppDatabase
     private lateinit var dao : CompetitorDao
 
@@ -73,11 +71,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
-                val cs = MaterialTheme.colorScheme
-                LaunchedEffect(Unit) {
-                    Log.d("THEME_TRACE", "Main: Primary = ${cs.primary}")
-                    Log.d("THEME_TRACE", "Main: OnPrimary = ${cs.onPrimary}")
-                }
                 val navController = rememberNavController()
                 Scaffold(
                     snackbarHost = {

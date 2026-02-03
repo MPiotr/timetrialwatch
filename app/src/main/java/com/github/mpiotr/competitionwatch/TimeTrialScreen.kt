@@ -49,14 +49,14 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
     val vSettings by  viewModel.settings.collectAsState()
     val onTrack = viewModel.notYetFinished.collectAsState()
     val numOnTrack = onTrack.value.size
-    var isaudio_playing by remember{ mutableStateOf(false)}
+    val startTimeReady = viewModel.startTimeReady.collectAsState()
 
 
     var elapsedMs by remember { mutableLongStateOf(0L) }
     var showStopDialog = remember { mutableStateOf(false)}
 
     LaunchedEffect(comp_start_time, elapsedMs) {
-            val now = SystemClock.elapsedRealtime()
+            val now = System.currentTimeMillis()
             elapsedMs = now
             delay(100) // 10 FPS precision
 
@@ -97,22 +97,23 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
     )
     {iner_padding ->
         Column(Modifier.fillMaxSize().padding(iner_padding), horizontalAlignment = Alignment.CenterHorizontally) {
-            if (!timeTrialStarted.value) {
+            if (!timeTrialStarted.value || !startTimeReady.value) {
                 Button(
                     {
-                        val start_time = SystemClock.elapsedRealtime()
+                        val start_time = System.currentTimeMillis()
                         viewModel.onTimeTrialStarted(start_time)
                     },
                     Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(top = 10.dp)
+                        .padding(top = 10.dp),
+                    enabled = startTimeReady.value
                 )
                 {
                     Text(stringResource(R.string.start_race))
                 }
             } else {
                 Text(
-                    viewModel.formattedRaceTime(SystemClock.elapsedRealtime()),
+                    viewModel.formattedRaceTime(System.currentTimeMillis()),
                     Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(top = 10.dp),

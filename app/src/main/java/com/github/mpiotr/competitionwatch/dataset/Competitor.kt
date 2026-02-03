@@ -1,6 +1,7 @@
 package com.github.mpiotr.competitionwatch.dataset
 
 import android.icu.util.ULocale
+import android.util.Log
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -71,7 +72,7 @@ data class Competitor
 
     fun formattedDayTime(ms : Long) : String{
         val datetime = Date(ms)
-        return SimpleDateFormat("hh:mm:ss", Locale.getDefault()).format(datetime)
+        return SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(datetime)
     }
     fun formattedTime(ms : Long) : String{
         val duration = ms.milliseconds

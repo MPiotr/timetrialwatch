@@ -35,7 +35,7 @@ fun SplitScreen(viewModel: CompetitorViewModel, modifier: Modifier,
 {
     var nowms by remember { mutableLongStateOf(0L) }
     LaunchedEffect(nowms ) {
-        val now = SystemClock.elapsedRealtime()
+        val now = System.currentTimeMillis()
         nowms = now
         delay(200)
     }

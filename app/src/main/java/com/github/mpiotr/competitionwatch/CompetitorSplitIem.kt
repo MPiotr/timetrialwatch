@@ -62,9 +62,6 @@ import kotlinx.coroutines.delay
 
             numberView.text = number.bib_number.toString()
             numberView.setTextColor(bib_colors[number.bib_color])
-
-            Log.d("INFO ITEM", "$number : $competitor, $split_index, $racePosition")
-
             if(competitor != null && racePosition != null) {
                 split_index!!
 
@@ -133,7 +130,7 @@ import kotlinx.coroutines.delay
 
 
     LaunchedEffect(nowms, comp_start_time) {
-        val now = SystemClock.elapsedRealtime()
+        val now = System.currentTimeMillis()
         nowms = now
         delay(200)
     }
@@ -201,7 +198,7 @@ import kotlinx.coroutines.delay
             Button(
                 {
                     if (valid_bib && currentItem != null) {
-                        splittime = SystemClock.elapsedRealtime()
+                        splittime = System.currentTimeMillis()
                         viewModel.onSplit(splittime, number.value)
 
                     }

@@ -41,7 +41,7 @@ fun CompetitorTimeTrialItem(item : Competitor, modifier : Modifier, viewModel: C
 
 
     LaunchedEffect(msnow, comp_start_time, item.startTime) {
-        msnow = SystemClock.elapsedRealtime()
+        msnow = System.currentTimeMillis()
         start_time = item.startTime
         delay(200)
     }
@@ -64,7 +64,7 @@ fun CompetitorTimeTrialItem(item : Competitor, modifier : Modifier, viewModel: C
             if (!started) {
                 Button({
                                     started = true
-                                    start_time = SystemClock.elapsedRealtime()
+                                    start_time = System.currentTimeMillis()
                                     viewModel.onItemChanged(item.copy(started = true, startTime = start_time))
                                 },
                        Modifier.wrapContentWidth().padding(8.dp)
