@@ -1,4 +1,4 @@
-package com.github.mpiotr.competitionwatch
+package com.github.mpiotr.competitionwatch.dataset
 
 data class Bib(val bib_number : Int, val bib_color : Int) : Comparable<Bib> {
     override fun compareTo(other: Bib): Int {

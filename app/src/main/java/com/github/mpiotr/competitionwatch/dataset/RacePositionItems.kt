@@ -1,4 +1,4 @@
-package com.github.mpiotr.competitionwatch
+package com.github.mpiotr.competitionwatch.dataset
 
 data class RacePositionItems(val currentPosition : Int,
                              val leader : Pair<Long, Competitor>?,
@@ -10,4 +10,3 @@ data class RacePositionItems(val currentPosition : Int,
         return "current: $currentPosition, leader: $leader, chaser $chaser, numCompleted $numCompleted"
     }
 }
-

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,15 +22,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.mpiotr.competitionwatch.dataset.Competitor
 
 
 @Composable
-fun CompetitorItem(item : Competitor,
-                   viewModel: CompetitorViewModel,
-                   modifier : Modifier = Modifier,
-                   item_color: Pair<Int, String>,
-                   comp_start_time: Long = 0,
-                   onNavigateToEdit : () -> Unit) {
+fun CompetitorListItem(item : Competitor,
+                       viewModel: CompetitorViewModel,
+                       modifier : Modifier = Modifier,
+                       item_color: Pair<Int, String>,
+                       comp_start_time: Long = 0,
+                       onNavigateToEdit : () -> Unit) {
     var name by remember(item.id) { mutableStateOf(item.name) }
     var bib_number by remember(item.id) { mutableStateOf(item.bib) }
     LaunchedEffect(item.name) { if (name != item.name) name = item.name }

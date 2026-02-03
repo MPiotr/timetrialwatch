@@ -1,12 +1,10 @@
 package com.github.mpiotr.competitionwatch
 
-import android.graphics.drawable.shapes.OvalShape
 import android.os.SystemClock
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,6 +29,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.github.mpiotr.competitionwatch.dataset.Bib
+import com.github.mpiotr.competitionwatch.dataset.Competitor
+import com.github.mpiotr.competitionwatch.dataset.RacePositionItems
 import kotlinx.coroutines.delay
 
 
@@ -124,7 +125,7 @@ import kotlinx.coroutines.delay
     var splittime by remember { mutableLongStateOf(0L) }
     var splitindex_local by remember { mutableStateOf(0) }
     var isFinishing by remember { mutableStateOf(false) }
-    var number = remember { mutableStateOf(Bib(0,0))}
+    var number = remember { mutableStateOf(Bib(0, 0))}
     var localRacePosition by remember { mutableStateOf< RacePositionItems?>(null) }
     var localCompetitor by remember { mutableStateOf<Competitor?>(null) }
     val currentItem by viewModel.currentItem(id).collectAsStateWithLifecycle()
@@ -157,7 +158,7 @@ import kotlinx.coroutines.delay
         .padding(12.dp)
         .height(230.dp) ) {
 
-        val valid_bib = number.value != Bib(0,0)
+        val valid_bib = number.value != Bib(0, 0)
         val split_buttons_enabled = valid_bib && splittime == 0L && currentItem != null && !(currentItem?.finished ?: true) && (currentItem?.started ?: false)
         val dial_buttons_enabled = splittime == 0L
 

@@ -1,4 +1,4 @@
-package com.github.mpiotr.competitionwatch
+package com.github.mpiotr.competitionwatch.dataset
 
 import androidx.room.Dao
 import androidx.room.Database

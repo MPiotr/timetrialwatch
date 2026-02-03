@@ -1,8 +1,7 @@
-package com.github.mpiotr.competitionwatch
+package com.github.mpiotr.competitionwatch.dataset
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import kotlinx.serialization.Serializable
 
 @Entity(tableName = "info")
 data class Settings(
@@ -10,4 +9,3 @@ data class Settings(
     val start_interval_seconds : Int = 1,
     val competition_start_time : Long = 0L,
     )
-

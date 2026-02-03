@@ -1,7 +1,6 @@
 package com.github.mpiotr.competitionwatch
 
 import android.content.ContentValues
-import android.media.MediaPlayer
 import android.media.SoundPool
 import android.os.Bundle
 import android.util.Log
@@ -24,6 +23,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.compose.AppTheme
+import com.github.mpiotr.competitionwatch.dataset.AppDatabase
+import com.github.mpiotr.competitionwatch.dataset.CompetitorDao
 
 
 class MainActivity : ComponentActivity() {

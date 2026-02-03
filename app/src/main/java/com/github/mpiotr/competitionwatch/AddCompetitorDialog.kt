@@ -30,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.mpiotr.competitionwatch.dataset.Bib
 
 @Composable
 fun AddCompetitorDialog(context: Context, viewModel: CompetitorViewModel, modifier : Modifier, onNavigateToList : () -> Unit)
@@ -45,7 +46,7 @@ fun AddCompetitorDialog(context: Context, viewModel: CompetitorViewModel, modifi
         if(edit.value) item = editItem.value
     }
     if(item == null) return
-    if(edit.value && item?.bib == Bib(0,0)) return
+    if(edit.value && item?.bib == Bib(0, 0)) return
 
 
     var bibCount = viewModel.countBib(item!!.bib).collectAsState()

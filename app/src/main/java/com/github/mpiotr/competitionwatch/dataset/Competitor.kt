@@ -1,4 +1,4 @@
-package com.github.mpiotr.competitionwatch
+package com.github.mpiotr.competitionwatch.dataset
 
 import androidx.room.Embedded
 import androidx.room.Entity
@@ -6,11 +6,8 @@ import androidx.room.PrimaryKey
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import java.text.SimpleDateFormat
-import java.time.LocalDateTime
-import java.time.LocalTime
 import java.util.Date
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.TimedValue
 
 class SplitConverters {
 
