@@ -84,9 +84,9 @@ fun SplitScreen(viewModel: CompetitorViewModel, modifier: Modifier,
                         .padding(top = 10.dp),
                     fontSize = 30.sp
                 )
-                CompetitorSplitItem(viewModel, modifier)
-                /*HorizontalDivider()
-            CompetitorSplitItem(viewModel, modifier)*/
+                CompetitorSplitItem(viewModel, modifier, 0)
+                HorizontalDivider()
+                CompetitorSplitItem(viewModel, modifier, 1)
             }
         }
     }

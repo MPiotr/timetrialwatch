@@ -28,14 +28,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.collections.getOrPut
 import kotlin.concurrent.thread
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -100,31 +104,35 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
         System.currentTimeMillis()
     )
 
-    val _currentBib = MutableStateFlow(Bib(0,0))
-    val currentBib = _currentBib.asStateFlow()
+    val _currentBib =  MutableStateFlow< Map<Int, Bib>> (emptyMap())
+    fun currentBib(id : Int): StateFlow<Bib> {
+        return _currentBib.map { it[id] ?: Bib(0,0)}.stateIn( viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            Bib(0,0)
+        )
+    }
     val minRevision = MutableStateFlow(0L)
-    fun selectBib(bib : Bib) {
-        _currentBib.value = bib
+    fun selectBib(bib : Bib, id : Int) {
+        _currentBib.update { old -> old + (id to bib) }
         minRevision.value = 0L
     }
 
-
-
-
-
+    val currentItemMap = mutableMapOf<Int, StateFlow<Competitor?>>()
     @OptIn(ExperimentalCoroutinesApi::class)
-    val currentItem = currentBib.transformLatest { bib ->
-        combine(dao.getCompetitor(bib.bib_number, bib.bib_color), minRevision)
-        {
-                item, minrev ->
-           /* if(item != null && item.revision >= minrev)
-                item
-            else
-                null*/ item
-        }.collect { emit(it)  }}.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = null)
+    fun currentItem(id: Int) : StateFlow<Competitor?> {
+        return currentItemMap.getOrPut(id) {
+            _currentBib
+                .map { it[id] }
+                .filterNotNull()
+                .flatMapLatest { bib ->
+                    dao.getCompetitor(bib.bib_number, bib.bib_color)
+                }.stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5_000),
+                    initialValue = null )
+            }
+
+    }
 
     val _currentSplit = MutableStateFlow(0)
     val currentSplit = _currentSplit.asStateFlow()
@@ -432,12 +440,11 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
     }
 
 
-      val racePositionLive :  StateFlow<Pair<Competitor, RacePositionItems>?> =
-        combine(currentItem, timeFlow, competitorsStateFlow) { competitor, msnow, all ->
-            if(competitor == null ) {
+    fun racePositionLive(id:Int) :  StateFlow<Pair<Competitor, RacePositionItems>?> {
+        return  combine(currentItem(id), timeFlow, competitorsStateFlow) { competitor, msnow, all ->
+            if (competitor == null) {
                 null
-            }
-            else {
+            } else {
                 val splits = competitor.splits
                 val start_time = competitor.startTime
                 val splitIndex = splits.size
@@ -459,21 +466,22 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
                 val leader =
                     if (position > 0) allSplits[position - 1] else null
                 val chaser =
-                    if (position >= 0 && position < allSplits.size) allSplits[position]  else null
+                    if (position >= 0 && position < allSplits.size) allSplits[position] else null
 
-                Pair(competitor,RacePositionItems(position + 1, leader, chaser, allSplits.size))
+                Pair(competitor, RacePositionItems(position + 1, leader, chaser, allSplits.size))
             }
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = null
         )
+    }
 
-    val isCurrentCompetitorFinishing : StateFlow<Boolean> =
-        combine(currentItem, groups) {competitor, allgroup ->
+    fun isCurrentCompetitorFinishing(id : Int) : StateFlow<Boolean> {
+        return combine(currentItem(id), groups) { competitor, allgroup ->
             val _group = competitor?.group ?: return@combine false
-            val group_info =  allgroup.first { _group == it.name }
-            if(competitor.sex == 1)
+            val group_info = allgroup.first { _group == it.name }
+            if (competitor.sex == 1)
                 competitor.splits.size == group_info.num_splits_men - 1
             else
                 competitor.splits.size == group_info.num_splits_women - 1
@@ -482,6 +490,7 @@ class CompetitorViewModel(application : Application, val dao : CompetitorDao, va
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = false
         )
+    }
 
 
     fun onTimeTrialStarted(startTime : Long) {

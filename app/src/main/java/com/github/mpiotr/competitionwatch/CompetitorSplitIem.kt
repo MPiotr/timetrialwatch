@@ -30,6 +30,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 
 
@@ -116,7 +117,7 @@ import kotlinx.coroutines.delay
 }
 
 
-@Composable fun CompetitorSplitItem(viewModel: CompetitorViewModel, modifier: Modifier)
+@Composable fun CompetitorSplitItem(viewModel: CompetitorViewModel, modifier: Modifier, id : Int)
 {
     val comp_start_time by viewModel.startTime.collectAsState()
     var nowms by remember { mutableLongStateOf(0L) }
@@ -126,8 +127,8 @@ import kotlinx.coroutines.delay
     var number = remember { mutableStateOf(Bib(0,0))}
     var localRacePosition by remember { mutableStateOf< RacePositionItems?>(null) }
     var localCompetitor by remember { mutableStateOf<Competitor?>(null) }
-    val currentItem by viewModel.currentItem.collectAsState()
-    val currentBib by viewModel.currentBib.collectAsState()
+    val currentItem by viewModel.currentItem(id).collectAsStateWithLifecycle()
+    val currentBib by viewModel.currentBib(id).collectAsState()
 
 
 
@@ -146,7 +147,7 @@ import kotlinx.coroutines.delay
         splittime = 0
         viewModel.selectSplit(0)
         number.value = Bib(0, 0);
-        viewModel.selectBib(number.value)
+        viewModel.selectBib(number.value, id)
         localCompetitor = null
         localRacePosition = null
     }
@@ -162,7 +163,7 @@ import kotlinx.coroutines.delay
 
         NumberDial({updated : Bib ->
                    number.value = updated
-                   viewModel.selectBib(updated)},
+                   viewModel.selectBib(updated, id)},
                 number.value.bib_number,
                 viewModel,
                 dial_buttons_enabled
@@ -171,7 +172,7 @@ import kotlinx.coroutines.delay
         Column()
         {
 
-            val racePositionLive = viewModel.racePositionLive.collectAsState()
+            val racePositionLive = viewModel.racePositionLive(id).collectAsState()
 
 
             if (valid_bib && currentItem != null && currentItem == racePositionLive.value?.first &&
@@ -180,7 +181,7 @@ import kotlinx.coroutines.delay
                 localCompetitor = currentItem
                 localRacePosition = racePositionLive.value!!.second
                 splitindex_local = currentItem!!.splits.size
-                isFinishing = viewModel.isCurrentCompetitorFinishing.collectAsState().value
+                isFinishing = viewModel.isCurrentCompetitorFinishing(id).collectAsState().value
             }
             else {
                 if(splittime == 0L || currentItem == null || currentItem?.finished ?: true) {

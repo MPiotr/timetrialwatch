@@ -46,7 +46,7 @@ fun CompetitorItem(item : Competitor,
     {
         Text(item.id.toString())
         IconButton({
-            viewModel.selectBib(item.bib)
+            viewModel.selectBib(item.bib, 0)
             viewModel.changeEditMode(true)
             onNavigateToEdit()
         }, enabled = !item.started

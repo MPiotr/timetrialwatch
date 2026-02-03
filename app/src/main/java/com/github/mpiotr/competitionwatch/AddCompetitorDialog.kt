@@ -37,7 +37,7 @@ fun AddCompetitorDialog(context: Context, viewModel: CompetitorViewModel, modifi
     val competitors by viewModel.competitorsStateFlow.collectAsState()
     val focusManager = LocalFocusManager.current
     val edit = viewModel.editCompetitor.collectAsState()
-    val editItem = viewModel.currentItem.collectAsState()
+    val editItem = viewModel.currentItem(0).collectAsState()
     var item by remember { mutableStateOf(
         if(edit.value ) editItem.value  else viewModel.newCompetitor() )
     }
