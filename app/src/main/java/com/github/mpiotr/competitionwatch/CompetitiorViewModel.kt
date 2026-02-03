@@ -64,7 +64,6 @@ class CompetitorViewModel(application : Application,
 
 
     val main_group_name = application.resources.getString(R.string.main_group_name)
-    val _groupsStateFlow = MutableStateFlow(mutableSetOf<String>(main_group_name))
     val groups = dao.groups().stateIn(viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         listOf(Groups(1L)))
@@ -107,6 +106,7 @@ class CompetitorViewModel(application : Application,
     )
 
     val _currentBib =  MutableStateFlow< Map<Int, Bib>> (emptyMap())
+
     fun currentBib(id : Int): StateFlow<Bib> {
         return _currentBib.map { it[id] ?: Bib(0, 0) }.stateIn( viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
@@ -211,7 +211,7 @@ class CompetitorViewModel(application : Application,
 
                 val start_time =
                     if (settings.competition_start_time != 0L)
-                        competitors[0].formattedDayTime(settings.competition_start_time!!)
+                        competitors[0].formattedDayTime(settings.competition_start_time)
                     else ""
 
 
@@ -403,9 +403,6 @@ class CompetitorViewModel(application : Application,
                     revision = nextRevision
                 )
                 dao.update(updated_item)
-                val forceUpdate1 = dao.getCompetitor(bib.bib_number, bib.bib_color).first()
-                val forceUpdate2 = dao.getAll().first()
-                Log.d("SPLITS", "new split time for $bib: ${splitTime}")
             }
         }
     }

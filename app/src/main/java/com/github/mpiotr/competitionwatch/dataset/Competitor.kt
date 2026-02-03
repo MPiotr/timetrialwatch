@@ -1,5 +1,6 @@
 package com.github.mpiotr.competitionwatch.dataset
 
+import android.icu.util.ULocale
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -7,6 +8,7 @@ import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
 
 class SplitConverters {
@@ -69,7 +71,7 @@ data class Competitor
 
     fun formattedDayTime(ms : Long) : String{
         val datetime = Date(ms)
-        return SimpleDateFormat("hh:mm:ss").format(datetime)
+        return SimpleDateFormat("hh:mm:ss", Locale.getDefault()).format(datetime)
     }
     fun formattedTime(ms : Long) : String{
         val duration = ms.milliseconds
