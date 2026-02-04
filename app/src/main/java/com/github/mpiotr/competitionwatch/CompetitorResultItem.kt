@@ -25,6 +25,7 @@ fun CompetitorResultItem(competitor: Competitor, index : Int) {
         Text(competitor.result.toString())
         val gap_text = if(competitor.gap != null) competitor.formattedGapTime(competitor.gap!!) else ""
         Text(gap_text, modifier = Modifier.width(60.dp))
+        Text(competitor.bib.bib_number.toString(), modifier = Modifier.width(40.dp))
         Text(competitor.name, modifier = Modifier.width(100.dp))
         Text(competitor.formattedDayTime(competitor.startTime))
 

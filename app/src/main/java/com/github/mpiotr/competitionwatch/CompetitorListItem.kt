@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,18 +65,7 @@ fun CompetitorListItem(item : Competitor,
             textAlign = TextAlign.Center
         )
         Text(item.group, modifier = Modifier.width(75.dp))
-        Text(if (item.sex == 1) "M" else "W", modifier = Modifier.width(75.dp) )
-
-        if (item.started) {
-            Text(
-                item.formattedStartRaceTime(comp_start_time),
-                modifier = Modifier.wrapContentWidth(),
-                fontSize = 12.sp
-            )
-            for (s in item.formattedSplitsRaceTime()) {
-                Text(s, modifier = Modifier.wrapContentWidth(), fontSize = 12.sp)
-            }
-        }
+        Text(if (item.sex == 1) stringResource(R.string.M) else stringResource(R.string.W), modifier = Modifier.width(75.dp) )
     }
 }
 

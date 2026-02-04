@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">Competition Watch</string>
+    <string name="app_name" translatable="false">Time Trial Watch</string>
     <string name="main_group_name">Regular</string>
     <string name="men">Men</string>
     <string name="women">Women</string>
@@ -33,4 +33,7 @@
     <string name="coming_to_split">coming to split %1$d</string>
     <string name="no_number">No such number/not started</string>
     <string name="first_at_this_split">First at this split of %1$d completed</string>
+    <string name="M">M</string>
+    <string name="W">W</string>
+    <string name="goto_settings">Settings</string>
 </resources>

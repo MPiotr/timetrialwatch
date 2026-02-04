@@ -5,6 +5,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,7 +13,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -33,7 +39,8 @@ import com.github.mpiotr.competitionwatch.dataset.Competitor
     fun CompetitorList(viewModel: CompetitorViewModel,
                    modifier : Modifier = Modifier,
                    onNavigateToAdd : ()->Unit,
-                   onNavigateToTimeTrial : ()->Unit)
+                   onNavigateToTimeTrial : ()->Unit,
+                   onNavigateToSettings : () -> Unit)
 {
     val competitors by viewModel.competitorsStateFlow.collectAsState()
 
@@ -53,8 +60,8 @@ import com.github.mpiotr.competitionwatch.dataset.Competitor
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    Button({ viewModel.changeEditMode(false); onNavigateToAdd() } ) {
-                        Text(stringResource(R.string.add_participant))
+                    Button({ viewModel.changeEditMode(false); onNavigateToSettings() } ) {
+                        Text(stringResource(R.string.goto_settings))
                     }
                     Button({ onNavigateToTimeTrial() }) {
                         Text(stringResource(R.string.to_start))
@@ -73,7 +80,7 @@ import com.github.mpiotr.competitionwatch.dataset.Competitor
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 userScrollEnabled = true,
-                modifier = Modifier.fillMaxSize().horizontalScroll(scroll_state).padding(innerPadding),
+                modifier = Modifier.horizontalScroll(scroll_state).padding(innerPadding).weight(1.0f),
             ) {
                 itemsIndexed(
                     items = competitors,
@@ -92,6 +99,14 @@ import com.github.mpiotr.competitionwatch.dataset.Competitor
                         else
                             MaterialTheme.colorScheme.surface, RectangleShape)
                     )
+                }
+            }
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Spacer(Modifier.weight(1.0f))
+                FloatingActionButton({
+                     viewModel.changeEditMode(false); onNavigateToAdd()
+                }, modifier = Modifier.padding(end = 16.dp, bottom = 50.dp), shape = CircleShape) {
+                    Icon(Icons.Filled.Add, stringResource(R.string.add_participant))
                 }
             }
 

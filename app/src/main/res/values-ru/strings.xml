@@ -28,9 +28,12 @@
     <string name="bib_color">Цвет номера</string>
     <string name="databaseIsEmpty">База данных пуста</string>
     <string name="competitionStartedAt">The competition started %1$s</string>
-    <string name="finish">Finish</string>
-    <string name="split">Split</string>
+    <string name="finish">Финиш</string>
+    <string name="split">Отсечка</string>
     <string name="coming_to_split">отсечка %1$d</string>
     <string name="no_number">No such number/not started</string>
     <string name="first_at_this_split">First at this split of %1$d completed</string>
+    <string name="M">М</string>
+    <string name="W">Ж</string>
+    <string name="goto_settings">Настройки</string>
 </resources>

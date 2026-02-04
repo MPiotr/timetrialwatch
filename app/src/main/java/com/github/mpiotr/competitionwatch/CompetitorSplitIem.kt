@@ -117,8 +117,7 @@ import kotlinx.coroutines.delay
 
 @Composable fun CompetitorSplitItem(viewModel: CompetitorViewModel, modifier: Modifier, id : Int)
 {
-    val comp_start_time by viewModel.startTime.collectAsState()
-    var nowms by remember { mutableLongStateOf(0L) }
+    val nowms = viewModel.timeFlow.collectAsState()
     var splittime by remember { mutableLongStateOf(0L) }
     var splitindex_local by remember { mutableStateOf(0) }
     var isFinishing by remember { mutableStateOf(false) }
@@ -126,21 +125,11 @@ import kotlinx.coroutines.delay
     var localRacePosition by remember { mutableStateOf< RacePositionItems?>(null) }
     var localCompetitor by remember { mutableStateOf<Competitor?>(null) }
     val currentItem by viewModel.currentItem(id).collectAsStateWithLifecycle()
-
-
-
-    LaunchedEffect(nowms, comp_start_time) {
-        val now = System.currentTimeMillis()
-        nowms = now
-        delay(200)
-    }
-
     val competitor = viewModel.getCompetitor(number.value).collectAsState()
-    LaunchedEffect(competitor) { }
 
 
     isFinishing = false
-    if(splittime != 0L && nowms - splittime > 1000) {
+    if(splittime != 0L && nowms.value - splittime > 500) {
         splittime = 0
         number.value = Bib(0, 0)
         viewModel.selectBib(number.value, id)
@@ -188,7 +177,7 @@ import kotlinx.coroutines.delay
 
             CompetitorInfoScreen(
                 number.value, localCompetitor, localRacePosition,
-                if (splittime != 0L) splittime else nowms,
+                if (splittime != 0L) splittime else nowms.value,
                 Modifier
                     .fillMaxWidth()
                     .weight(1.0f), splitindex_local,

@@ -90,7 +90,11 @@ class MainActivity : ComponentActivity() {
                                 {
                                     viewModel.arrangeStartTimes() // Only for late-registered competitors, normally on start button
                                     navController.navigate("TimeTrial")
-                                })
+                                },
+                                {
+                                    navController.navigate("SettingScreen")
+                                }
+                            )
                         }
                         composable("SettingScreen") {
                             SettingsScreen (
