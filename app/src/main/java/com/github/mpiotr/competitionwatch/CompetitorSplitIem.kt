@@ -1,7 +1,5 @@
 package com.github.mpiotr.competitionwatch
 
-import android.os.SystemClock
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
@@ -15,7 +13,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -32,7 +29,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.github.mpiotr.competitionwatch.dataset.Bib
 import com.github.mpiotr.competitionwatch.dataset.Competitor
 import com.github.mpiotr.competitionwatch.dataset.RacePositionItems
-import kotlinx.coroutines.delay
 
 
 @Composable fun CompetitorInfoScreen(number : Bib,
@@ -125,7 +121,6 @@ import kotlinx.coroutines.delay
     var localRacePosition by remember { mutableStateOf< RacePositionItems?>(null) }
     var localCompetitor by remember { mutableStateOf<Competitor?>(null) }
     val currentItem by viewModel.currentItem(id).collectAsStateWithLifecycle()
-    val competitor = viewModel.getCompetitor(number.value).collectAsState()
 
 
     isFinishing = false

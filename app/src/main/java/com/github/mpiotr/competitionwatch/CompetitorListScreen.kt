@@ -84,7 +84,7 @@ import com.github.mpiotr.competitionwatch.dataset.Competitor
             ) {
                 itemsIndexed(
                     items = competitors,
-                    { ind : Int, item  : Competitor -> item.id }
+                    { _ : Int, item  : Competitor -> item.id }
                 )
                 {
 
