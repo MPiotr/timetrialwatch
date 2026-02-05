@@ -67,12 +67,14 @@ import com.github.mpiotr.competitionwatch.dataset.RacePositionItems
                 competitorTimeView.text = competitor.formattedRaceTime(nowMs)
                 splitView.visibility = View.VISIBLE
                 splitView.text = view.context.getString(R.string.coming_to_split).format(split_index + 1)
-                if(racePosition!!.leader != null)
+                if(racePosition.leader != null)
                 {
                     leaderNameView.visibility= View.VISIBLE
                     leaderTimeView.visibility= View.VISIBLE
                     leaderNameView.text = "${racePosition.currentPosition - 1}: ${racePosition.leader.second.name}"
-                    leaderTimeView.text = racePosition.leader.second.formattedTime(racePosition.leader.first)
+                    val leaderItem = racePosition.leader.second
+                    val leaderTime = racePosition.leader.first
+                    leaderTimeView.text = "${leaderItem.formattedTime(leaderTime)} (${competitor.formattedLoseWinTime(nowMs, leaderTime)})"
                 }
                 else {
                     if(racePosition.numCompleted == 0){
@@ -88,8 +90,10 @@ import com.github.mpiotr.competitionwatch.dataset.RacePositionItems
                 if(racePosition.chaser != null) {
                     chaserNameView.visibility= View.VISIBLE
                     chaserTimeView.visibility= View.VISIBLE
+                    val chaserItem = racePosition.chaser.second
+                    val chaserTime = racePosition.chaser.first
                     chaserNameView.text = "${racePosition.currentPosition+1}: ${racePosition.chaser.second.name}"
-                    chaserTimeView.text = racePosition.chaser.second.formattedTime(racePosition.chaser.first)
+                    chaserTimeView.text = "${chaserItem.formattedTime(chaserTime)} (${competitor.formattedLoseWinTime(nowMs, chaserTime)})"
                 }
                 else {
                     chaserNameView.visibility= View.GONE

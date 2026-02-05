@@ -1,9 +1,9 @@
 # Time trial watch
-A simple stopwatch for time trial competitions.
+A simple stopwatch for a small time trial competition.
 
 Features
-* Groups of participants
-* Different set of bib numbers (colors)
-* Can send e-mail with the result
+* Standings by group of participants
+* Bibs can have the same number but different colors
+* Can send e-mails with the result
 
 

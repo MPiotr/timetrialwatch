@@ -1,7 +1,5 @@
 package com.github.mpiotr.competitionwatch.dataset
 
-import android.icu.util.ULocale
-import android.util.Log
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -10,6 +8,7 @@ import androidx.room.TypeConverters
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
 
 class SplitConverters {
@@ -43,15 +42,6 @@ data class Competitor
      val email : String? = null)
 {
 
-    fun formattedStartRaceTime(comp_start_time : Long) : String{
-        val duration = (startTime - comp_start_time).milliseconds
-        val competitionTime = duration.toComponents {
-                hours, minutes, seconds, nanoseconds ->
-            val centiseconds = (nanoseconds / 10e7.toFloat()).toInt()
-            "%02d:%02d:%02d.%d".format(hours, minutes, seconds, centiseconds)  }
-        return competitionTime
-    }
-
     fun formattedRaceTime(ms : Long) : String{
         val duration = (ms - startTime).milliseconds
         val competitionTime = duration.toComponents {
@@ -83,20 +73,32 @@ data class Competitor
         return competitionTime
     }
 
-        fun formattedGapTime(ms : Long) : String{
-        val duration = ms.milliseconds
+    fun formattedGapTime(ms : Long) : String{
+        val sign = if(ms >= 0) +1 else -1   // positive gap is gap behind.
+        val signchar = if(sign == 1) '+' else '-'
+        val duration = abs(ms).milliseconds
         val competitionTime = duration.toComponents {
                 hours, minutes, seconds, nanoseconds ->
             val centiseconds = (nanoseconds / 10e7.toFloat()).toInt()
             if(hours > 0)
-                "+%d:%02d:%02d.%d".format(hours, minutes, seconds, centiseconds)
+                "%s%d:%02d:%02d.%d".format(signchar ,hours, minutes, seconds, centiseconds)
             else if(minutes > 0)
-                "+%d:%02d.%d".format( minutes, seconds, centiseconds)
+                "%s%d:%02d.%d".format( signchar, minutes, seconds, centiseconds)
             else
-                "+%d.%d".format(seconds, centiseconds)
+                "%s%d.%d".format(signchar, seconds, centiseconds)
         }
         return competitionTime
     }
+
+    fun formattedDeltaTime(ms : Long, ms_ref : Long) : String{
+        return formattedGapTime(-ms + ms_ref)
+    }
+
+    fun formattedLoseWinTime(msnow : Long, other_result : Long) : String {
+        return formattedDeltaTime(msnow - startTime, other_result)
+    }
+
+
 
 
 
