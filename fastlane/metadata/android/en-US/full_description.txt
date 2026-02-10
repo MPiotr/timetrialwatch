@@ -1,0 +1,2 @@
+A simple stopwatch for a small time trial competition (each participant starts in his/her own time). No ads, no tracking, runs locally on a device, no internet required.
+Supports bib sets of different colors, and standings by group of participants ( men/women + manually added)

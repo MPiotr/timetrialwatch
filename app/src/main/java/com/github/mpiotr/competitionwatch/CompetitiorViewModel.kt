@@ -3,10 +3,7 @@ package com.github.mpiotr.competitionwatch
 
 import android.app.Application
 import android.content.Intent
-import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.graphics.Color
-import android.os.SystemClock
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -29,18 +26,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.transform
-import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.collections.getOrPut
 import kotlin.concurrent.thread
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -88,7 +81,6 @@ class CompetitorViewModel(application : Application,
 // return colorSet.map{Pair(colorPallete[it], colorNames[it])}
 
 
-    var competitors  = com.github.mpiotr.competitionwatch.competitors
     val competitorCountFlow = dao.competitorCount().stateIn(
         viewModelScope,
         SharingStarted.Eagerly,
@@ -175,9 +167,6 @@ class CompetitorViewModel(application : Application,
     var bibIndex : MutableMap<Bib, Int> = mutableMapOf()
 
     init {
-        for(c in competitors.withIndex())
-            bibIndex[c.value.bib] = c.index
-
         viewModelScope.launch {
             competitorCountFlow.collect {value -> competitorCount = value }
            // _registeredBibs.collect { value -> registeredBibs = value.toMutableSet()}
@@ -309,7 +298,7 @@ class CompetitorViewModel(application : Application,
     {   _preStartUpdateComplete.value = false
         viewModelScope.launch {
 
-            val comp_start_time = settings.value?.competition_start_time ?: 0L
+            //val comp_start_time = settings.value?.competition_start_time ?: 0L
             val start_interval = settings.value!!.start_interval_seconds
             val arranged = competitorsStateFlow.value.sortedWith { a, b ->
                 if (a.group != b.group)
