@@ -45,7 +45,7 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
 {
     val comp_start_time by viewModel.startTime.collectAsState()
     val timeTrialStarted = viewModel.timeTrialStarted.collectAsState()
-    val nextStartingCompetitors = viewModel.nextStartingCompetitors.collectAsState()
+
     val vSettings by  viewModel.settings.collectAsState()
     val onTrack = viewModel.notYetFinished.collectAsState()
     val numOnTrack = onTrack.value.size
@@ -61,11 +61,6 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
             delay(100) // 10 FPS precision
 
     }
-    LaunchedEffect(nextStartingCompetitors) {
-
-    }
-
-
 
     Scaffold(modifier = modifier.fillMaxSize(),
         topBar = {
@@ -112,6 +107,7 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
                     Text(stringResource(R.string.start_race))
                 }
             } else {
+                val nextStartingCompetitors = viewModel.nextStartingCompetitors.collectAsState()
                 Text(
                     viewModel.formattedRaceTime(System.currentTimeMillis()),
                     Modifier

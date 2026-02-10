@@ -2,6 +2,7 @@ package com.github.mpiotr.competitionwatch
 
 import android.media.SoundPool
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -59,6 +60,7 @@ class MainActivity : ComponentActivity() {
                                         navController.navigate("AddCompetitor")
                                 },
                                 {
+                                    Log.d("START", "on Navigate")
                                     viewModel.arrangeStartTimes() // Only for late-registered competitors, normally on start button
                                     navController.navigate("TimeTrial")
                                 },
