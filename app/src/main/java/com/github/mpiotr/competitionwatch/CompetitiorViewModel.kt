@@ -4,6 +4,7 @@ package com.github.mpiotr.competitionwatch
 import android.app.Application
 import android.content.Intent
 import android.graphics.Color
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -92,7 +93,7 @@ class CompetitorViewModel(application : Application,
 
     val timeFlow =  flow { while(true) {
         emit(System.currentTimeMillis())
-        delay(200)
+        delay(100)
     } }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
@@ -267,7 +268,7 @@ class CompetitorViewModel(application : Application,
     fun newCompetitor() : Competitor {
 
         val nextid = competitorCount + 1L
-        return Competitor(nextid, Bib(0, 0), "", main_group_name, 1, 0)
+        return Competitor(nextid, Bib(0, 0), "", main_group_name, 1, 0, startTime = 0L)
     }
 
     fun resetData()
@@ -297,6 +298,7 @@ class CompetitorViewModel(application : Application,
     fun arrangeStartTimes()
     {   _preStartUpdateComplete.value = false
         viewModelScope.launch {
+            Log.d("START", "launched")
 
             //val comp_start_time = settings.value?.competition_start_time ?: 0L
             val start_interval = settings.value!!.start_interval_seconds
@@ -306,6 +308,7 @@ class CompetitorViewModel(application : Application,
                 else if (a.sex != b.sex) -a.sex + b.sex
                 else a.bib.compareTo(b.bib)
             }.filter({!it.started}).mapIndexed { index, competitor ->
+                Log.d("START", "$index: $competitor, ${!competitor.started} && ${competitor.startTime == 0L} ${competitor.startTime}")
                 if (!competitor.started && competitor.startTime == 0L) {
                         competitor.copy(startTime = index * 1000L * start_interval + 30000)
 
@@ -325,6 +328,7 @@ class CompetitorViewModel(application : Application,
             colorOrder = colorMap.map { Pair(it.value, it.key) }
                 .sortedByDescending { it.first }.map{it.second}.toMutableList()
             _preStartUpdateComplete.value = true
+            Log.d("START", "completed")
         }
     }
 

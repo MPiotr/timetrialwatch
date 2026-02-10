@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : Modifier, onNavigateToList : () -> Unit)
 {
+    val focusManager = LocalFocusManager.current
     Scaffold(modifier = modifier.fillMaxSize(),
         topBar = {
             Row(Modifier.height(64.dp)//.background(Color.Blue)
@@ -56,7 +58,10 @@ fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : 
             Row(horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()) {
                  Button(
-                    {onNavigateToList()},
+                    {
+                        focusManager.clearFocus(force = true)
+                        onNavigateToList()
+                    },
                     Modifier.padding(bottom = 20.dp, start = 20.dp, end = 20.dp),
                     content = { Text(stringResource(R.string.to_list)) },
                 )
@@ -134,16 +139,16 @@ fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : 
                             modifier = Modifier.fillMaxWidth()
                         )
                         {
+                            var gname by remember{mutableStateOf(g.name)}
                             TextField(
-                                g.name,
+                                gname,
                                 { updated ->
-                                    viewModel.onGroupUpdated(
-                                        g.copy(
-                                            name = updated.trim()
-                                        )
-                                    )
+                                    gname = updated
                                 },
                                 label = { Text(stringResource(R.string.group_name)) },
+                                modifier = Modifier.onFocusChanged(
+                                    {viewModel.onGroupUpdated(
+                                        g.copy(name = gname) )})
                             )
                         }
                         Row(modifier = Modifier.padding(10.dp)) {
