@@ -1,1 +1,1 @@
-A stopwatch for simple time-trial competitions (each participant starts at his own time)
+A stopwatch for simple time-trial competitions
