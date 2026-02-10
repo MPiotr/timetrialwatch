@@ -148,36 +148,56 @@ fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : 
                         }
                         Row(modifier = Modifier.padding(10.dp)) {
                             Column {
+                                var numSplits by remember { mutableStateOf(g.num_splits_men.toString()) }
                                 Text( stringResource(R.string.men))
                                 TextField(
-                                    g.num_splits_men.toString(),
+                                    numSplits,
                                     { updated ->
-                                        viewModel.onGroupUpdated(
-                                            g.copy(
-                                                num_splits_men = updated.toIntOrNull() ?: 4
+                                        numSplits = updated
+                                        val newvalue = updated.toIntOrNull()
+                                        if(newvalue != null) {
+                                            viewModel.onGroupUpdated(
+                                                g.copy(
+                                                    num_splits_men = newvalue
+                                                )
                                             )
-                                        )
+                                        }
                                     },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     label = { Text("Max number of splits") },
-                                    modifier = Modifier.width(150.dp)
+                                    modifier = Modifier.width(150.dp).onFocusChanged(
+                                        {
+                                            if(numSplits.toIntOrNull() == null) {
+                                                numSplits = g.num_splits_men.toString()
+                                            }
+                                        })
                                 )
                             }
                             Spacer(modifier = Modifier.weight(1.0f))
                             Column {
+                                var numSplits by remember { mutableStateOf(g.num_splits_women.toString()) }
                                 Text(stringResource(R.string.women))
                                 TextField(
-                                    g.num_splits_women.toString(),
+                                    numSplits,
                                     { updated ->
-                                        viewModel.onGroupUpdated(
-                                            g.copy(
-                                                num_splits_women = updated.toIntOrNull() ?: 4
+                                        numSplits = updated
+                                        val newvalue = updated.toIntOrNull()
+                                        if(newvalue != null) {
+                                            viewModel.onGroupUpdated(
+                                                g.copy(
+                                                    num_splits_men = newvalue
+                                                )
                                             )
-                                        )
+                                        }
                                     },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     label = { Text("Max number of splits") },
-                                    modifier = Modifier.width(150.dp)
+                                    modifier = Modifier.width(150.dp).onFocusChanged(
+                                        {
+                                            if(numSplits.toIntOrNull() == null) {
+                                                numSplits = g.num_splits_women.toString()
+                                            }
+                                        })
                                 )
                             }
                         }

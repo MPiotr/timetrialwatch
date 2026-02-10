@@ -88,7 +88,6 @@ class CompetitorViewModel(application : Application,
 // return colorSet.map{Pair(colorPallete[it], colorNames[it])}
 
 
-    var competitors  = com.github.mpiotr.competitionwatch.competitors
     val competitorCountFlow = dao.competitorCount().stateIn(
         viewModelScope,
         SharingStarted.Eagerly,
@@ -175,9 +174,6 @@ class CompetitorViewModel(application : Application,
     var bibIndex : MutableMap<Bib, Int> = mutableMapOf()
 
     init {
-        for(c in competitors.withIndex())
-            bibIndex[c.value.bib] = c.index
-
         viewModelScope.launch {
             competitorCountFlow.collect {value -> competitorCount = value }
            // _registeredBibs.collect { value -> registeredBibs = value.toMutableSet()}
