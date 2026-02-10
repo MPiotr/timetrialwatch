@@ -130,80 +130,85 @@ fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : 
             Spacer(Modifier.height(8.dp))
             Text("Groups", fontSize = 20.sp)
 
-            LazyColumn(Modifier.background(MaterialTheme.colorScheme.surface)) {
-                for (g in groups.value) {
-                    item {
-                        HorizontalDivider(modifier = Modifier.padding(4.dp, 9.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        {
-                            var gname by remember{mutableStateOf(g.name)}
-                            TextField(
-                                gname,
-                                { updated ->
-                                    gname = updated
-                                },
-                                label = { Text(stringResource(R.string.group_name)) },
-                                modifier = Modifier.onFocusChanged(
-                                    {viewModel.onGroupUpdated(
-                                        g.copy(name = gname) )})
+            if(groups.value != null) {
+                LazyColumn(Modifier.background(MaterialTheme.colorScheme.surface)) {
+                    for (g in groups.value) {
+                        item {
+                            HorizontalDivider(modifier = Modifier.padding(4.dp, 9.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth()
                             )
-                        }
-                        Row(modifier = Modifier.padding(10.dp)) {
-                            Column {
-                                var numSplits by remember { mutableStateOf(g.num_splits_men.toString()) }
-                                Text( stringResource(R.string.men))
+                            {
+                                var gname by remember { mutableStateOf(g.name) }
                                 TextField(
-                                    numSplits,
+                                    gname,
                                     { updated ->
-                                        numSplits = updated
-                                        val newvalue = updated.toIntOrNull()
-                                        if(newvalue != null) {
-                                            viewModel.onGroupUpdated(
-                                                g.copy(
-                                                    num_splits_men = newvalue
-                                                )
-                                            )
-                                        }
+                                        gname = updated
                                     },
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    label = { Text("Max number of splits") },
-                                    modifier = Modifier.width(150.dp).onFocusChanged(
+                                    label = { Text(stringResource(R.string.group_name)) },
+                                    modifier = Modifier.onFocusChanged(
                                         {
-                                            if(numSplits.toIntOrNull() == null) {
-                                                numSplits = g.num_splits_men.toString()
-                                            }
+                                            viewModel.onGroupUpdated(
+                                                g.copy(name = gname)
+                                            )
                                         })
                                 )
                             }
-                            Spacer(modifier = Modifier.weight(1.0f))
-                            Column {
-                                var numSplits by remember { mutableStateOf(g.num_splits_women.toString()) }
-                                Text(stringResource(R.string.women))
-                                TextField(
-                                    numSplits,
-                                    { updated ->
-                                        numSplits = updated
-                                        val newvalue = updated.toIntOrNull()
-                                        if(newvalue != null) {
-                                            viewModel.onGroupUpdated(
-                                                g.copy(
-                                                    num_splits_men = newvalue
+                            Row(modifier = Modifier.padding(10.dp)) {
+                                Column {
+                                    var numSplits by remember { mutableStateOf(g.num_splits_men.toString()) }
+                                    Text(stringResource(R.string.men))
+                                    TextField(
+                                        numSplits,
+                                        { updated ->
+                                            numSplits = updated
+                                            val newvalue = updated.toIntOrNull()
+                                            if (newvalue != null) {
+                                                viewModel.onGroupUpdated(
+                                                    g.copy(
+                                                        num_splits_men = newvalue
+                                                    )
                                                 )
-                                            )
-                                        }
-                                    },
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    label = { Text("Max number of splits") },
-                                    modifier = Modifier.width(150.dp).onFocusChanged(
-                                        {
-                                            if(numSplits.toIntOrNull() == null) {
-                                                numSplits = g.num_splits_women.toString()
                                             }
-                                        })
-                                )
+                                        },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        label = { Text("Max number of splits") },
+                                        modifier = Modifier.width(150.dp).onFocusChanged(
+                                            {
+                                                if (numSplits.toIntOrNull() == null) {
+                                                    numSplits = g.num_splits_men.toString()
+                                                }
+                                            })
+                                    )
+                                }
+                                Spacer(modifier = Modifier.weight(1.0f))
+                                Column {
+                                    var numSplits by remember { mutableStateOf(g.num_splits_women.toString()) }
+                                    Text(stringResource(R.string.women))
+                                    TextField(
+                                        numSplits,
+                                        { updated ->
+                                            numSplits = updated
+                                            val newvalue = updated.toIntOrNull()
+                                            if (newvalue != null) {
+                                                viewModel.onGroupUpdated(
+                                                    g.copy(
+                                                        num_splits_men = newvalue
+                                                    )
+                                                )
+                                            }
+                                        },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        label = { Text("Max number of splits") },
+                                        modifier = Modifier.width(150.dp).onFocusChanged(
+                                            {
+                                                if (numSplits.toIntOrNull() == null) {
+                                                    numSplits = g.num_splits_women.toString()
+                                                }
+                                            })
+                                    )
+                                }
                             }
                         }
                     }

@@ -1,6 +1,5 @@
 package com.github.mpiotr.competitionwatch
 
-import android.os.SystemClock
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,18 +12,12 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
 
 
 @Composable
@@ -33,15 +26,10 @@ fun SplitScreen(viewModel: CompetitorViewModel, modifier: Modifier,
                 onNavigateToStart: ()-> Unit,
                 onNavigateToResults: ()-> Unit)
 {
-    var nowms by remember { mutableLongStateOf(0L) }
-    LaunchedEffect(nowms ) {
-        val now = System.currentTimeMillis()
-        nowms = now
-        delay(200)
-    }
+    var nowms = viewModel.timeFlow.collectAsState()
     Scaffold(modifier = modifier.fillMaxSize(),
         topBar = {
-            Row(Modifier.height(64.dp)//.background(Color.Blue)
+            Row(Modifier.height(64.dp)
                 .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically) {
                 Text("Splits and Finish",
@@ -71,7 +59,7 @@ fun SplitScreen(viewModel: CompetitorViewModel, modifier: Modifier,
         Column(Modifier.fillMaxWidth().padding(innerPadding)) {
             if(viewModel.startTime.collectAsState().value != 0L) {
                 Text(
-                    viewModel.formattedRaceTime(nowms),
+                    viewModel.formattedRaceTime(nowms.value),
                     Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(top = 10.dp),

@@ -62,7 +62,7 @@ class CompetitorViewModel(application : Application,
     val main_group_name = application.resources.getString(R.string.main_group_name)
     val groups = dao.groups().stateIn(viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        listOf(Groups(1L)))
+        null)
     fun onCreateNewGroup()
     {
         viewModelScope.launch {
@@ -79,8 +79,6 @@ class CompetitorViewModel(application : Application,
     }
     val _groupIndex = mutableMapOf(main_group_name to 0)
 
-// return colorSet.map{Pair(colorPallete[it], colorNames[it])}
-
 
     val competitorCountFlow = dao.competitorCount().stateIn(
         viewModelScope,
@@ -88,7 +86,6 @@ class CompetitorViewModel(application : Application,
         0
     )
     var competitorCount: Int = 0
-    //var registeredBibs : MutableSet<Bib>? = null
 
 
     val timeFlow =  flow { while(true) {
@@ -170,9 +167,7 @@ class CompetitorViewModel(application : Application,
     init {
         viewModelScope.launch {
             competitorCountFlow.collect {value -> competitorCount = value }
-           // _registeredBibs.collect { value -> registeredBibs = value.toMutableSet()}
         }
-
     }
 
 
@@ -191,8 +186,6 @@ class CompetitorViewModel(application : Application,
         false)
 
 
-    //private val _competitorsStateFlow = MutableStateFlow(competitors)
-    //val competitorsStateFlow : StateFlow<List<Competitor> > =  _competitorsStateFlow.asStateFlow()
     val competitorsStateFlow : StateFlow<List<Competitor> > =
                      dao.getAll().stateIn(viewModelScope,
                                 SharingStarted.WhileSubscribed(5_000),
@@ -308,7 +301,6 @@ class CompetitorViewModel(application : Application,
                 else if (a.sex != b.sex) -a.sex + b.sex
                 else a.bib.compareTo(b.bib)
             }.filter({!it.started}).mapIndexed { index, competitor ->
-                Log.d("START", "$index: $competitor, ${!competitor.started} && ${competitor.startTime == 0L} ${competitor.startTime}")
                 if (!competitor.started && competitor.startTime == 0L) {
                         competitor.copy(startTime = index * 1000L * start_interval + 30000)
 
@@ -454,8 +446,10 @@ class CompetitorViewModel(application : Application,
 
     fun isCurrentCompetitorFinishing(id : Int) : StateFlow<Boolean> {
         return combine(currentItem(id), groups) { competitor, allgroup ->
+            if(allgroup == null) return@combine false
             val _group = competitor?.group ?: return@combine false
-            val group_info = allgroup.first { _group == it.name }
+            val group_info = allgroup.firstOrNull() { _group == it.name } ?: return@combine false
+
             if (competitor.sex == 1)
                 competitor.splits.size == group_info.num_splits_men - 1
             else
