@@ -98,7 +98,8 @@ class MainActivity : ComponentActivity() {
                                 this@MainActivity,
                                 viewModel,
                                 Modifier.padding(paddingValues),
-                                { navController.navigate("Competitors") })
+                                {
+                                    navController.navigate("Competitors") })
                         }
                         composable("AddCompetitor")
                          {
@@ -106,7 +107,11 @@ class MainActivity : ComponentActivity() {
                                 this@MainActivity,
                                 viewModel,
                                 Modifier.padding(paddingValues),
-                                { navController.navigate("Competitors") })
+                                {
+                                    navController.navigate("Competitors")
+                                    {
+                                        popUpTo("Competitors") {inclusive = true}
+                                    }})
                         }
                         composable("TimeTrial") {
                             TimeTrialScreen(
