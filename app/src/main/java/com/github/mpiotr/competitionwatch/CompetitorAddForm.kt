@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -86,7 +88,11 @@ fun CompetitorAddForm(item : Competitor, viewModel: CompetitorViewModel, context
                 .focusRequester(focusRequester),
             label = { Text("Name") },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions ( onNext = {focusManager.clearFocus(force = true)})
+            keyboardActions = KeyboardActions ( onNext = {
+                focusManager.moveFocus(
+                    focusDirection = FocusDirection.Next,
+                )
+            })
         )
 
         Row(verticalAlignment = Alignment.Bottom) {
@@ -108,7 +114,9 @@ fun CompetitorAddForm(item : Competitor, viewModel: CompetitorViewModel, context
                     keyboardType = KeyboardType.Number,
                     imeAction = ImeAction.Next
                 ),
-                keyboardActions = KeyboardActions ( onNext = {focusManager.clearFocus(force = true)}),
+                keyboardActions = KeyboardActions ( onNext = { focusManager.moveFocus(
+                    focusDirection = FocusDirection.Next,
+                )}),
                 textStyle = TextStyle(color = Color(viewModel.colorPallete[bib.bib_color])),
                 modifier = Modifier
                     .width(100.dp)
@@ -156,7 +164,7 @@ fun CompetitorAddForm(item : Competitor, viewModel: CompetitorViewModel, context
                                 },
                                 colors = colors,
                                 shape = RectangleShape,
-                                modifier = Modifier.width(40.dp)
+                                modifier = Modifier.width(40.dp).focusRequester(focusRequester).focusable()
                             ) {}
                         }
                     }
