@@ -1,6 +1,5 @@
 package com.github.mpiotr.competitionwatch
 
-import android.content.ContentValues
 import android.media.SoundPool
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -15,13 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.room.OnConflictStrategy
 import androidx.room.Room
-import androidx.room.RoomDatabase
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.compose.AppTheme
 import com.github.mpiotr.competitionwatch.dataset.AppDatabase
 import com.github.mpiotr.competitionwatch.dataset.CompetitorDao
+import com.github.mpiotr.competitionwatch.dataset.getDatabaseCallbacks
 
 
 class MainActivity : ComponentActivity() {
@@ -30,25 +27,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
-        val callback: RoomDatabase.Callback = object : RoomDatabase.Callback() {
-            override fun onCreate(db: SupportSQLiteDatabase) {
-                val cv = ContentValues()
-                cv.put("id",  1L)
-                cv.put("name", getString(R.string.main_group_name))
-                cv.put("num_splits_men", 4)
-                cv.put("num_splits_women", 4)
-                db.insert("groups", OnConflictStrategy.REPLACE,cv)
-                cv.clear()
-                cv.put("start_interval_seconds", 15)
-                cv.put("competition_start_time", 0L)
-                db.insert("info", OnConflictStrategy.REPLACE,cv)
-            }
-
-            /*fun onOpen(db: SupportSQLiteDatabase?) {
-                // do something every time database is open
-            }*/
-        }
-
+        val callback = getDatabaseCallbacks(this) // Fills in default values
         database = Room.databaseBuilder(
             application,
             AppDatabase::class.java, "competition-db.sqlite",
@@ -57,14 +36,9 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        setTitle("Participants")
-
-        this.application
         val viewModel = CompetitorViewModel(this.application, dao, database)
         val soundPool = SoundPool.Builder().setMaxStreams(1).build()
         val soundId =  soundPool.load(this, R.raw.racestart_wav, 1)
-
-
 
         setContent {
             AppTheme {
