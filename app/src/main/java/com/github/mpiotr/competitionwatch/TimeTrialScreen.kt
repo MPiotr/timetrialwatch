@@ -1,7 +1,6 @@
 package com.github.mpiotr.competitionwatch
 
 import android.media.SoundPool
-import android.os.SystemClock
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,20 +20,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +38,6 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
                     onNavigateToList : ()->Unit,
                     onNavigateToSplit : () -> Unit)
 {
-    val comp_start_time by viewModel.startTime.collectAsState()
     val timeTrialStarted = viewModel.timeTrialStarted.collectAsState()
 
     val vSettings by  viewModel.settings.collectAsState()
@@ -52,15 +46,8 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
     val startTimeReady = viewModel.startTimeReady.collectAsState()
 
 
-    var elapsedMs by remember { mutableLongStateOf(0L) }
-    var showStopDialog = remember { mutableStateOf(false)}
+    val showStopDialog = remember { mutableStateOf(false)}
 
-    LaunchedEffect(comp_start_time, elapsedMs) {
-            val now = System.currentTimeMillis()
-            elapsedMs = now
-            delay(100) // 10 FPS precision
-
-    }
 
     Scaffold(modifier = modifier.fillMaxSize(),
         topBar = {
@@ -108,8 +95,9 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
                 }
             } else {
                 val nextStartingCompetitors = viewModel.nextStartingCompetitors.collectAsState()
+                val time by viewModel.timeFlow.collectAsState()
                 Text(
-                    viewModel.formattedRaceTime(System.currentTimeMillis()),
+                    viewModel.formattedRaceTime(time),
                     Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(top = 10.dp),
@@ -132,7 +120,7 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
                             {
                                 if(!viewModel.startSoundPlaying){
                                     viewModel.onSoundStart()
-                                    val streamId = soundPool.play(soundId, 1f, 1f, 1, 0, 1f )// .start()
+                                    soundPool.play(soundId, 1f, 1f, 1, 0, 1f )// .start()
                                 }
                             })
                     }

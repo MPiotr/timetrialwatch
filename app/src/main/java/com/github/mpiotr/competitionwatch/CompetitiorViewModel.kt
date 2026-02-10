@@ -93,7 +93,7 @@ class CompetitorViewModel(application : Application,
 
     val timeFlow =  flow { while(true) {
         emit(System.currentTimeMillis())
-        delay(200)
+        delay(100)
     } }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
