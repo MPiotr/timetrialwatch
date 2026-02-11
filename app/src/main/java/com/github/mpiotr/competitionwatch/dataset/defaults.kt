@@ -17,6 +17,7 @@ fun getDatabaseCallbacks(context : Context) : RoomDatabase.Callback = object : R
         db.insert("groups", OnConflictStrategy.REPLACE, cv)
         cv.clear()
         cv.put("start_interval_seconds", 15)
+        cv.put("start_initial_offset_seconds", 30)
         cv.put("competition_start_time", 0L)
         db.insert("info", OnConflictStrategy.REPLACE, cv)
     }

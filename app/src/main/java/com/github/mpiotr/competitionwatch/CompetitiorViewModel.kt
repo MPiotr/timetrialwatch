@@ -271,7 +271,7 @@ class CompetitorViewModel(application : Application,
                 dao.deleteAllCompetitors()
                 dao.deleteAllGroups()
                 dao.deleteAllSettings()
-                val defaultSettings = Settings(1L, 15, 0L)
+                val defaultSettings = Settings(1L, 15, 30, 0L)
                 dao.insertSettings(defaultSettings)
 
                 val defaultGroup = Groups(
@@ -295,6 +295,7 @@ class CompetitorViewModel(application : Application,
 
             //val comp_start_time = settings.value?.competition_start_time ?: 0L
             val start_interval = settings.value!!.start_interval_seconds
+            val start_offset = settings.value!!.start_initial_offset_seconds
             val arranged = competitorsStateFlow.value.sortedWith { a, b ->
                 if (a.group != b.group)
                     _groupIndex[a.group]?.minus(_groupIndex[b.group] ?: 0) ?: 0
@@ -302,7 +303,7 @@ class CompetitorViewModel(application : Application,
                 else a.bib.compareTo(b.bib)
             }.filter({!it.started}).mapIndexed { index, competitor ->
                 if (!competitor.started && competitor.startTime == 0L) {
-                        competitor.copy(startTime = index * 1000L * start_interval + 30000)
+                        competitor.copy(startTime = index * 1000L * start_interval + start_offset*1000)
 
                 }
                 else competitor

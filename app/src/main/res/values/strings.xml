@@ -51,4 +51,5 @@
     <string name="results">Results</string>
     <string name="goto_splits">Go to Splits</string>
     <string name="sendpdf">Send pdf</string>
+    <string name="starting_offset">Race vs first participant start offset</string>
 </resources>
