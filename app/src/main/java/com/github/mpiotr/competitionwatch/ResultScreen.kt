@@ -29,12 +29,12 @@ fun ResultScreen(viewModel: CompetitorViewModel, modifier: Modifier, onNavigateT
     Scaffold(
         topBar = {
             Row(
-                Modifier.height(64.dp)//.background(Color.Blue)
+                Modifier.height(64.dp)
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Results",
+                    stringResource(R.string.results),
                     fontSize = 24.sp,
                     modifier = Modifier.padding(start = 16.dp)
                 )
@@ -44,10 +44,10 @@ fun ResultScreen(viewModel: CompetitorViewModel, modifier: Modifier, onNavigateT
             Row(horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()) {
                 Button({ onNavigateToSplits() }, modifier) {
-                    Text("Go to Splits")
+                    Text(stringResource(R.string.goto_splits))
                 }
                 Button( {viewModel.sendResultPDF()}, modifier) {
-                    Text("Send pdf to competitors")
+                    Text(stringResource(R.string.sendpdf))
                 }
             }
         }

@@ -54,7 +54,7 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
             Row(Modifier.height(64.dp)//.background(Color.Blue)
                 .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically) {
-                Text("Starting order",
+                Text(stringResource(R.string.starting_order),
                     fontSize = 24.sp,
                     modifier = Modifier.padding(start = 16.dp))
             }
@@ -71,7 +71,7 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
                     Text(stringResource(R.string.to_list))
                 }
                 Button({ onNavigateToSplit() }, Modifier.padding(8.dp)) {
-                    Text("Go to Split")
+                    Text(stringResource(R.string.goto_splits))
                 }
             }
 

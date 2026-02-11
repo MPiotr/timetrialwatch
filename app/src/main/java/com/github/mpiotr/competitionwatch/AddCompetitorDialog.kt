@@ -50,7 +50,7 @@ fun AddCompetitorDialog(context: Context, viewModel: CompetitorViewModel, modifi
             Row(Modifier.height(64.dp)//.background(Color.Blue)
                 .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically) {
-                Text(if(edit.value) "Edit Participant" else "Add new participant",
+                Text(if(edit.value) stringResource(R.string.edit_participant) else stringResource(R.string.add_new_participant),
                     fontSize = 24.sp,
                     modifier = Modifier.padding(start = 16.dp))
             }

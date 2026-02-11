@@ -49,7 +49,7 @@ fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : 
             Row(Modifier.height(64.dp)//.background(Color.Blue)
                 .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically) {
-                Text("Setup",
+                Text(stringResource(R.string.settings),
                     fontSize = 24.sp,
                     modifier = Modifier.padding(start = 16.dp))
             }
@@ -122,13 +122,13 @@ fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : 
                 },
 
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                label = { Text("Starting interval, s") },
+                label = { Text(stringResource(R.string.starting_interval)) },
                 modifier = Modifier.onFocusChanged(
                     { viewModel.onSettingsUpdated(settings.value!!.copy(start_interval_seconds = local_start_interval)) })
                     .fillMaxWidth().padding(top = 16.dp)
             )
             Spacer(Modifier.height(8.dp))
-            Text("Groups", fontSize = 20.sp)
+            Text(stringResource(R.string.groups), fontSize = 20.sp)
 
             if(groups.value != null) {
                 LazyColumn(Modifier.background(MaterialTheme.colorScheme.surface)) {
@@ -200,7 +200,7 @@ fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : 
                                             }
                                         },
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        label = { Text("Max number of splits") },
+                                        label = { Text(stringResource(R.string.max_number_of_splits)) },
                                         modifier = Modifier.width(150.dp).onFocusChanged(
                                             {
                                                 if (numSplits.toIntOrNull() == null) {
@@ -212,16 +212,23 @@ fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : 
                             }
                         }
                     }
+                    item {
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            Spacer(Modifier.weight(1.0f))
+                            FloatingActionButton(
+                                {
+                                    viewModel.onCreateNewGroup()
+                                },
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                shape = CircleShape
+                            ) {
+                                Icon(Icons.Filled.Add, "Localized description")
+                            }
+                        }
+                    }
                 }
             }
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Spacer(Modifier.weight(1.0f))
-                FloatingActionButton({
-                    viewModel.onCreateNewGroup()
-                }, modifier = Modifier.padding(horizontal = 16.dp), shape = CircleShape) {
-                    Icon(Icons.Filled.Add, "Localized description")
-                }
-            }
+
 
         }
     }

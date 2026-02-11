@@ -49,7 +49,7 @@ import com.github.mpiotr.competitionwatch.dataset.Competitor
             Row(Modifier.height(64.dp)//.background(Color.Blue)
                 .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically) {
-                Text("List of Participants",
+                Text(stringResource(R.string.list_of_participants),
                     fontSize = 24.sp,
                     modifier = Modifier.padding(start = 16.dp))
             }

@@ -86,7 +86,7 @@ fun CompetitorAddForm(item : Competitor, viewModel: CompetitorViewModel, context
                     }
                 })
                 .focusRequester(focusRequester),
-            label = { Text("Name") },
+            label = { Text(stringResource(R.string.name)) },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions ( onNext = {
                 focusManager.moveFocus(
@@ -138,7 +138,7 @@ fun CompetitorAddForm(item : Competitor, viewModel: CompetitorViewModel, context
                         }
                     })
                     .focusRequester(focusRequester),
-                label = { Text("Bib number") }
+                label = { Text(stringResource(R.string.bib_number)) }
 
 
             )

@@ -26,13 +26,13 @@ fun SplitScreen(viewModel: CompetitorViewModel, modifier: Modifier,
                 onNavigateToStart: ()-> Unit,
                 onNavigateToResults: ()-> Unit)
 {
-    var nowms = viewModel.timeFlow.collectAsState()
+    val nowms = viewModel.timeFlow.collectAsState()
     Scaffold(modifier = modifier.fillMaxSize(),
         topBar = {
             Row(Modifier.height(64.dp)
                 .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically) {
-                Text("Splits and Finish",
+                Text(stringResource(R.string.splits_and_finish),
                     fontSize = 24.sp,
                     modifier = Modifier.padding(start = 16.dp))
             }

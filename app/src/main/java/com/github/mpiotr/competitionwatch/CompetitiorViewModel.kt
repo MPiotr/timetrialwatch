@@ -67,7 +67,7 @@ class CompetitorViewModel(application : Application,
     {
         viewModelScope.launch {
                 val newid = dao.groups().first().size + 1L
-                val new_group = Groups(newid, "New Group Name")
+                val new_group = Groups(newid, application.getString(R.string.newgroupname).format(newid))
                 dao.insertGroup(new_group)
 
         }

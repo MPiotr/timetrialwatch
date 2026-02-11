@@ -36,4 +36,19 @@
     <string name="M">М</string>
     <string name="W">Ж</string>
     <string name="goto_settings">Настройки</string>
+    <string name="newgroupname">Группа %1$d</string>
+    <string name="max_number_of_splits">Количество отсечек</string>
+    <string name="starting_interval">Стартовый интервал, сек</string>
+    <string name="bib_number">Номер</string>
+    <string name="name">Имя</string>
+    <string name="settings">Настройки</string>
+    <string name="groups">Группы</string>
+    <string name="list_of_participants">Список участников</string>
+    <string name="add_new_participant">Добавить участника</string>
+    <string name="edit_participant">Редактировать участника</string>
+    <string name="starting_order">Стартовый порядок</string>
+    <string name="splits_and_finish">Отсечка и финиш</string>
+    <string name="results">Результаты</string>
+    <string name="goto_splits">Отсечка</string>
+    <string name="sendpdf">Разослать результаты</string>
 </resources>
