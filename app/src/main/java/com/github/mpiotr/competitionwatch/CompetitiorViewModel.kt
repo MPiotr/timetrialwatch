@@ -329,7 +329,7 @@ class CompetitorViewModel(application : Application,
         competitorsStateFlow.map { list ->
             list.filter { !it.started }
                 .sortedBy { it.startTime }
-                .take(5)
+                .take(7)
         }
         .distinctUntilChanged{old, new ->
                             old.map { it.id to it.started } ==
@@ -338,6 +338,15 @@ class CompetitorViewModel(application : Application,
         .stateIn(viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptyList<Competitor>())
+
+    val startingOrder: StateFlow<List<Competitor>> =
+        competitorsStateFlow.map { list ->
+            list.filter { !it.started }
+                .sortedBy { it.startTime }
+
+        }.stateIn(viewModelScope,
+                started = SharingStarted.WhileSubscribed(1_000),
+                initialValue = emptyList<Competitor>())
 
     fun getResults() : Map<Pair<Int,String>,List<Competitor>> {
         val all_results = competitorsStateFlow.value.mapNotNull { if(it.splits.size > 0) it else null }.sortedWith { a, b ->

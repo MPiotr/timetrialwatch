@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.AlertDialog
@@ -26,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -79,7 +81,9 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
     )
     {iner_padding ->
         Column(Modifier.fillMaxSize().padding(iner_padding), horizontalAlignment = Alignment.CenterHorizontally) {
-            if (!timeTrialStarted.value || !startTimeReady.value) {
+            if (!timeTrialStarted.value || !startTimeReady.value)
+            {
+                val startingOrder by viewModel.startingOrder.collectAsState()
                 Button(
                     {
                         val start_time = System.currentTimeMillis()
@@ -93,6 +97,29 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
                 {
                     Text(stringResource(R.string.start_race))
                 }
+                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    for((j,competitor) in startingOrder.withIndex())
+                    {
+                        item {
+                            Row(modifier = Modifier.background(if((j+1) % 2 == 0)
+                                MaterialTheme.colorScheme.surfaceVariant
+                            else
+                                MaterialTheme.colorScheme.surface, RectangleShape))
+                            {
+                                Text(competitor.name, modifier = Modifier.weight(1.0f))
+                                Text(competitor.bib.bib_number.toString(),
+                                    modifier = Modifier.width(40.dp),
+                                    color =
+                                        Color(viewModel.colorPallete[competitor.bib.bib_color])
+                                )
+                                Text(competitor.formattedTime(competitor.startTime),
+                                    modifier = Modifier.width(100.dp))
+                            }
+                        }
+                    }
+
+                }
+
             } else {
                 val nextStartingCompetitors = viewModel.nextStartingCompetitors.collectAsState()
                 val time by viewModel.timeFlow.collectAsState()
