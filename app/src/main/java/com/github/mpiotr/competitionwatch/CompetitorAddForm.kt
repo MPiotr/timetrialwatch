@@ -53,8 +53,6 @@ fun CompetitorAddForm(item : Competitor, viewModel: CompetitorViewModel, context
     var name by remember(item.id) { mutableStateOf(item.name) }
     var age by remember(item.id) { mutableStateOf(item.age) }
     var bib by remember(item.id) { mutableStateOf(item.bib) }
-    var sex by remember(item.id) { mutableStateOf(item.sex) }
-    var group by remember { mutableStateOf(item.group) }
     var email by remember { mutableStateOf(item.email ?: "") }
     val focusRequester = remember { FocusRequester() }
     val edit = viewModel.editCompetitor.collectAsState()
@@ -65,9 +63,7 @@ fun CompetitorAddForm(item : Competitor, viewModel: CompetitorViewModel, context
 
     LaunchedEffect(item.name) {  if (name != item.name) name = item.name   }
     LaunchedEffect(item.bib) {   if (bib != item.bib) bib = item.bib}
-    LaunchedEffect(item.age) {   if (age != item.age) age = item.age}
-    LaunchedEffect(item.sex) {   if (sex != item.sex) sex = item.sex}
-    LaunchedEffect(item.group) { if (group != item.group) group = item.group }
+    //LaunchedEffect(item.age) {   if (age != item.age) age = item.age}
     LaunchedEffect(item.email) { if (email != item.email) email = item.email?: "" }
 
     Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp))

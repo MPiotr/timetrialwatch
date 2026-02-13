@@ -117,10 +117,10 @@ class CompetitorViewModel(application : Application,
 
     val currentItemMap = mutableMapOf<Int, StateFlow<Competitor?>>()
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun currentItem(id: Int) : StateFlow<Competitor?> {
-        return currentItemMap.getOrPut(id) {
+    fun currentItem(widgetId: Int) : StateFlow<Competitor?> {
+        return currentItemMap.getOrPut(widgetId) {
             _currentBib
-                .map { it[id] }
+                .map { it[widgetId] }
                 .filterNotNull()
                 .flatMapLatest { bib ->
                     dao.getCompetitor(bib.bib_number, bib.bib_color)
@@ -302,7 +302,7 @@ class CompetitorViewModel(application : Application,
                 else if (a.sex != b.sex) -a.sex + b.sex
                 else a.bib.compareTo(b.bib)
             }.filter({!it.started}).mapIndexed { index, competitor ->
-                if (!competitor.started && competitor.startTime == 0L) {
+                if (!competitor.started ) {
                         competitor.copy(startTime = index * 1000L * start_interval + start_offset*1000)
 
                 }

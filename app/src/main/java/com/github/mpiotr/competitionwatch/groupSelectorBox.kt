@@ -37,7 +37,7 @@ fun GroupSelectorBox(selectedGroup : String, viewModel: CompetitorViewModel, onG
     val groups = viewModel.groups.collectAsState()
     var expanded by remember{mutableStateOf(false)}
     val focusManager = LocalFocusManager.current
-    //var currentGroupName by remember {mutableStateOf(selectedGroup)}
+
 
     Column {
         Text(stringResource(R.string.group), fontSize = 10.sp)

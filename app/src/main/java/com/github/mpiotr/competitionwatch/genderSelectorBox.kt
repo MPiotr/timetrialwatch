@@ -19,6 +19,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +39,8 @@ fun GenderSelectorBox(selected: Int, onItemSelected : (Int)-> Unit)
     var sex by remember { mutableStateOf(selected) }
     var expanded by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(selected) {   if (sex != selected) sex = selected}
 
     Column {
         Text(stringResource(R.string.sex), fontSize = 10.sp)

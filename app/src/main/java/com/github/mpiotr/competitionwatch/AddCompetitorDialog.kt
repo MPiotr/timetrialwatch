@@ -47,6 +47,7 @@ fun AddCompetitorDialog(context: Context, viewModel: CompetitorViewModel, modifi
 
     Scaffold(modifier = modifier.fillMaxSize(),
         topBar = {
+            if(item == null) return@Scaffold
             Row(Modifier.height(64.dp)//.background(Color.Blue)
                 .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically) {
@@ -56,6 +57,7 @@ fun AddCompetitorDialog(context: Context, viewModel: CompetitorViewModel, modifi
             }
         },
         bottomBar = {
+            if(item == null) return@Scaffold
             Row(horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()) {
                 if(edit.value){
@@ -71,7 +73,7 @@ fun AddCompetitorDialog(context: Context, viewModel: CompetitorViewModel, modifi
                         },
                         Modifier.padding(bottom = 20.dp, start = 20.dp, end = 20.dp),
                         content = { Text(stringResource(R.string.save)) },
-                        enabled = (item!!.bib.bib_number != 0)
+                        enabled = (item?.bib?.bib_number != 0) ?: false
                     )
                 }
                 else {
@@ -101,6 +103,7 @@ fun AddCompetitorDialog(context: Context, viewModel: CompetitorViewModel, modifi
         }
     )
     { innerPadding ->
+        if(item == null) return@Scaffold
         Column(Modifier.fillMaxWidth().padding(innerPadding)) {
             CompetitorAddForm(
                 item!!,
