@@ -276,7 +276,7 @@ fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : 
                                             if (newvalue != null) {
                                                 viewModel.onGroupUpdated(
                                                     g.copy(
-                                                        num_splits_men = newvalue
+                                                        num_splits_women = newvalue
                                                     )
                                                 )
                                             }
