@@ -1,7 +1,5 @@
 package com.github.mpiotr.competitionwatch
 
-import android.content.Context
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,30 +44,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : Modifier, onNavigateToList : () -> Unit)
+fun SettingsScreen(viewModel: CompetitorViewModel, modifier : Modifier)
 {
     val focusManager = LocalFocusManager.current
     Scaffold(modifier = modifier.fillMaxSize(),
         topBar = {
-            Row(Modifier.height(64.dp)//.background(Color.Blue)
+            Row(Modifier.height(64.dp)
                 .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.settings),
                     fontSize = 24.sp,
                     modifier = Modifier.padding(start = 16.dp))
-            }
-        },
-        bottomBar = {
-            Row(horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()) {
-                 Button(
-                    {
-                        focusManager.clearFocus(force = true)
-                        onNavigateToList()
-                    },
-                    Modifier.padding(bottom = 20.dp, start = 20.dp, end = 20.dp),
-                    content = { Text(stringResource(R.string.to_list)) },
-                )
             }
         }
     )

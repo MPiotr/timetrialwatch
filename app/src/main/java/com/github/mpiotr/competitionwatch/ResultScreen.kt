@@ -23,9 +23,8 @@ import androidx.compose.ui.unit.sp
 
 
 @Composable
-fun ResultScreen(viewModel: CompetitorViewModel, modifier: Modifier, onNavigateToSplits : ()->Unit)
+fun ResultScreen(viewModel: CompetitorViewModel, modifier: Modifier)
 {
-
     Scaffold(
         topBar = {
             Row(
@@ -43,9 +42,6 @@ fun ResultScreen(viewModel: CompetitorViewModel, modifier: Modifier, onNavigateT
         bottomBar = {
             Row(horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()) {
-                Button({ onNavigateToSplits() }, modifier) {
-                    Text(stringResource(R.string.goto_splits))
-                }
                 Button( {viewModel.sendResultPDF()}, modifier) {
                     Text(stringResource(R.string.sendpdf))
                 }

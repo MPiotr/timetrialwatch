@@ -1,9 +1,7 @@
 package com.github.mpiotr.competitionwatch
 
-import android.media.SoundPool
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,10 +33,7 @@ import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
-                    soundPool: SoundPool, soundId : Int,
-                    onNavigateToList : ()->Unit,
-                    onNavigateToSplit : () -> Unit)
+fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier)
 {
     val timeTrialStarted = viewModel.timeTrialStarted.collectAsState()
 
@@ -60,23 +55,6 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
                     fontSize = 24.sp,
                     modifier = Modifier.padding(start = 16.dp))
             }
-        },
-        bottomBar = {
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.Bottom
-            ) {
-
-                Button({ onNavigateToList() }, Modifier.padding(8.dp)) {
-                    Text(stringResource(R.string.to_list))
-                }
-                Button({ onNavigateToSplit() }, Modifier.padding(8.dp)) {
-                    Text(stringResource(R.string.goto_splits))
-                }
-            }
-
         }
     )
     {iner_padding ->
@@ -147,7 +125,7 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier,
                             {
                                 if(!viewModel.startSoundPlaying){
                                     viewModel.onSoundStart()
-                                    soundPool.play(soundId, 1f, 1f, 1, 0, 1f )// .start()
+                                    viewModel.soundPool!!.play(viewModel.soundId!!, 1f, 1f, 1, 0, 1f )// .start()
                                 }
                             })
                     }

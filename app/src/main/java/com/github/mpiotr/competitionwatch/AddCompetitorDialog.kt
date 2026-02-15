@@ -1,6 +1,6 @@
 package com.github.mpiotr.competitionwatch
 
-import android.content.Context
+import android.app.Application
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,8 +28,9 @@ import androidx.compose.ui.unit.sp
 import com.github.mpiotr.competitionwatch.dataset.Bib
 
 @Composable
-fun AddCompetitorDialog(context: Context, viewModel: CompetitorViewModel, modifier : Modifier, onNavigateToList : () -> Unit)
+fun AddCompetitorDialog(application: Application, viewModel: CompetitorViewModel, modifier : Modifier, onNavigateToList : () -> Unit)
 {
+    val context = application.applicationContext
     val focusManager = LocalFocusManager.current
     val edit = viewModel.editCompetitor.collectAsState()
     val editItem = viewModel.currentItem(0).collectAsState()
@@ -95,7 +96,7 @@ fun AddCompetitorDialog(context: Context, viewModel: CompetitorViewModel, modifi
                     Button(
                             {onNavigateToList()},
                     Modifier.padding(bottom = 20.dp, start = 20.dp, end = 20.dp),
-                    content = { Text(stringResource(R.string.to_list)) },
+                    content = { Text(stringResource(R.string.close)) },
                     )
                 }
 

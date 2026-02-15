@@ -51,5 +51,6 @@
     <string name="results">Результаты</string>
     <string name="goto_splits">Отсечка</string>
     <string name="sendpdf">Разослать результаты</string>
-    <string name="starting_offset">Race vs first participant start offset</string>
+    <string name="starting_offset">Старт первого участника после старта секундомера, сек</string>
+    <string name="close">Закрыть</string>
 </resources>

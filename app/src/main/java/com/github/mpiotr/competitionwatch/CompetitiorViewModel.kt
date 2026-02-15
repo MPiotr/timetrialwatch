@@ -4,6 +4,7 @@ package com.github.mpiotr.competitionwatch
 import android.app.Application
 import android.content.Intent
 import android.graphics.Color
+import android.media.SoundPool
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +47,9 @@ class CompetitorViewModel(application : Application,
     val colorPallete : List<Int> = listOf(Color.BLUE, Color.GREEN, Color.RED, Color.BLACK, Color.YELLOW)
     val colorNames : List<String> = listOf("Blue", "Green", "Red", "Black", "Yellow")
     var colorOrder : MutableList<Int> = mutableListOf()
+
+    var soundPool : SoundPool? = null
+    var soundId : Int? = null
 
 
     var waitDataset = false
