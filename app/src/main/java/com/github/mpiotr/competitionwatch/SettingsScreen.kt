@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -84,13 +85,15 @@ fun SettingsScreen(viewModel: CompetitorViewModel, modifier : Modifier)
         {
             item {
                 Text(info_text, modifier = Modifier.fillMaxWidth())
-                Button({ showResetAlert = true },
+                Button(
+                    { showResetAlert = true },
                     colors = ButtonColors(
                         containerColor = MaterialTheme.colorScheme.error,
                         contentColor = MaterialTheme.colorScheme.onError,
                         disabledContentColor = MaterialTheme.colorScheme.secondary,
                         disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer
-                        ))
+                    )
+                )
                 { Text(stringResource(R.string.reset_data)) }
                 if (showResetAlert) {
                     AlertDialog(
@@ -114,7 +117,9 @@ fun SettingsScreen(viewModel: CompetitorViewModel, modifier : Modifier)
 
                 val interval_initial_value = settings.value!!.start_interval_seconds.toString()
                 var local_start_interval by remember { mutableStateOf(interval_initial_value) }
-                LaunchedEffect(interval_initial_value) { local_start_interval = interval_initial_value}
+                LaunchedEffect(interval_initial_value) {
+                    local_start_interval = interval_initial_value
+                }
                 TextField(
                     local_start_interval,
                     { updated ->
@@ -149,7 +154,7 @@ fun SettingsScreen(viewModel: CompetitorViewModel, modifier : Modifier)
 
                 val offset_initial_value = settings.value!!.start_initial_offset_seconds.toString()
                 var local_start_offset by remember { mutableStateOf(offset_initial_value) }
-                LaunchedEffect(offset_initial_value) {local_start_offset = offset_initial_value}
+                LaunchedEffect(offset_initial_value) { local_start_offset = offset_initial_value }
                 TextField(
                     local_start_offset,
                     { updated ->
@@ -180,10 +185,63 @@ fun SettingsScreen(viewModel: CompetitorViewModel, modifier : Modifier)
                     })
                         .fillMaxWidth().padding(top = 16.dp)
                 )
-
-                Spacer(Modifier.height(8.dp))
-                Text(stringResource(R.string.groups), fontSize = 20.sp)
             }
+            item {
+                Column(horizontalAlignment = Alignment.Start) {
+                    // Use participant name checkbox
+                    val use_name_initial = settings.value!!.use_name
+                    var local_use_name by remember { mutableStateOf(use_name_initial) }
+                    LaunchedEffect(use_name_initial) { local_use_name = use_name_initial }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(local_use_name, { newvalue ->
+                            viewModel.onSettingsUpdated(settings.value!!.copy(use_name = newvalue))
+                        })
+                        Text(stringResource(R.string.use_name))
+                    }
+
+                    // Use bibs colors checkbox
+                    val use_color_initial = settings.value!!.use_colors
+                    var local_use_use_colors by remember { mutableStateOf(use_color_initial) }
+                    LaunchedEffect(use_color_initial) { local_use_use_colors = use_color_initial }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(local_use_use_colors, { newvalue ->
+                            viewModel.onSettingsUpdated(settings.value!!.copy(use_colors = newvalue))
+                        })
+                        Text(stringResource(R.string.use_bib_color))
+                    }
+                    Text(stringResource(R.string.use_bib_color_explanation), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 48.dp))
+
+
+                    // Use email checkbox
+                    val use_email_initial = settings.value!!.use_email
+                    var local_use_email by remember { mutableStateOf(use_email_initial) }
+                    LaunchedEffect(use_email_initial) { local_use_email = use_email_initial }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(local_use_email, { newvalue ->
+                            viewModel.onSettingsUpdated(settings.value!!.copy(use_email = newvalue))
+                        })
+                        Text(stringResource(R.string.use_email))
+                    }
+                    Text(stringResource(R.string.use_email_explanation), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 48.dp))
+
+                    // Play start signal checkbox
+                    val play_sound_initial = settings.value!!.play_start_sound
+                    var local_play_sound by remember { mutableStateOf(play_sound_initial) }
+                    LaunchedEffect(play_sound_initial) { local_play_sound = play_sound_initial }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(local_play_sound, { newvalue ->
+                            viewModel.onSettingsUpdated(settings.value!!.copy(play_start_sound = newvalue))
+                        })
+                        Text(stringResource(R.string.play_start_sound))
+                    }
+                    Text(stringResource(R.string.play_start_sound_explanation), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 48.dp) )
+                }
+
+                    Spacer(Modifier.height(8.dp))
+                    Text(stringResource(R.string.groups), fontSize = 20.sp)
+
+            }
+
 
             if(groups.value != null) {
                     for (g in groups.value) {

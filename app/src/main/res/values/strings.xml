@@ -53,4 +53,12 @@
     <string name="sendpdf">Send pdf</string>
     <string name="starting_offset">Race vs first participant start offset, s</string>
     <string name="close">Close</string>
+    <string name="use_name">Use participant names</string>
+    <string name="use_bib_color">Use bibs\' colors</string>
+    <string name="use_email">Add users e-mails into registartion form</string>
+    <string name="play_start_sound">Play starting signal</string>
+    <string name="use_bib_color_explanation">In case there are a few set of bibs that differs in color but can have equal numbers. You can choose up to 3 different colors</string>
+    <string name="use_email_explanation">The email is used for sending the result  to participants</string>
+    <string name="play_start_sound_explanation">The sound is for reference. The start is still manual, by pressing the button. The starting order may also be changed, by pressing starting buttons of participant in any order</string>
+    <string name="list_of_participants_short">Participants</string>
 </resources>

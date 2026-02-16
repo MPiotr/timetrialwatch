@@ -53,4 +53,12 @@
     <string name="sendpdf">Разослать результаты</string>
     <string name="starting_offset">Старт первого участника после старта секундомера, сек</string>
     <string name="close">Закрыть</string>
+    <string name="use_name">Имена участников</string>
+    <string name="use_bib_color">Номера имеют разный цвет</string>
+    <string name="use_email">E-mail в форме регистрации</string>
+    <string name="play_start_sound">Проигрывать стартовый сигнал</string>
+    <string name="use_bib_color_explanation">Если в соревновании используется несколько комплектов нагрудных номеров, которые отличаются цветом, но могут иметь одинаковое значение. Можно выбрать до трёх разных цветов.</string>
+    <string name="use_email_explanation">Почта используется для рассылки результатов участникам</string>
+    <string name="play_start_sound_explanation">Старт всё равно в ручном режиме, по нажатию кнопки судьёй. Стартовый порядок также может быть произвольным. Он определяется последовательностью нажатия на \"старт\" для каждого участника</string>
+    <string name="list_of_participants_short">Участники</string>
 </resources>

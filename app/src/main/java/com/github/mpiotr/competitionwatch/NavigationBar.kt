@@ -43,7 +43,7 @@ fun getLabels(application : Application) : Map<String, Labels>
     val aR = application.resources
     return mapOf(
         Destinations.SETTINGS.route to Labels( aR.getString(R.string.settings), aR.getString(R.string.settings)),
-        Destinations.LIST.route to Labels(aR.getString(R.string.list_of_participants),  aR.getString(R.string.list_of_participants)),
+        Destinations.LIST.route to Labels(aR.getString(R.string.list_of_participants_short),  aR.getString(R.string.list_of_participants)),
         Destinations.START.route to Labels( aR.getString(R.string.to_start),  aR.getString(R.string.to_start)),
         Destinations.SPLIT.route to Labels( aR.getString(R.string.goto_splits),  aR.getString(R.string.goto_splits)),
         Destinations.RESULT.route  to Labels( aR.getString(R.string.to_results),  aR.getString(R.string.to_results))

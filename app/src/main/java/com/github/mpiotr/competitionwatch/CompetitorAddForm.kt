@@ -59,37 +59,41 @@ fun CompetitorAddForm(item : Competitor, viewModel: CompetitorViewModel, context
 
     val bib_count = viewModel.countBib(bib).collectAsState()
     val focusManager = LocalFocusManager.current
+    val settings = viewModel.settings.collectAsState()
+
+    if(settings.value == null) return
 
 
     LaunchedEffect(item.name) {  if (name != item.name) name = item.name   }
     LaunchedEffect(item.bib) {   if (bib != item.bib) bib = item.bib}
-    //LaunchedEffect(item.age) {   if (age != item.age) age = item.age}
     LaunchedEffect(item.email) { if (email != item.email) email = item.email?: "" }
 
     Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp))
     {
-        TextField(
-            name,
-            { text ->
-                name = text
-            },
-            enabled = !item.started,
-            modifier = Modifier
-                .fillMaxWidth()
-                .onFocusChanged({ focusState ->
-                    if (!focusState.isFocused && !item.started) {
-                        onItemChanged(item.copy(name = name)) // changes upstream
-                    }
+        if(settings.value!!.use_name) {
+            TextField(
+                name,
+                { text ->
+                    name = text
+                },
+                enabled = !item.started,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged({ focusState ->
+                        if (!focusState.isFocused && !item.started) {
+                            onItemChanged(item.copy(name = name)) // changes upstream
+                        }
+                    })
+                    .focusRequester(focusRequester),
+                label = { Text(stringResource(R.string.name)) },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = {
+                    focusManager.moveFocus(
+                        focusDirection = FocusDirection.Next,
+                    )
                 })
-                .focusRequester(focusRequester),
-            label = { Text(stringResource(R.string.name)) },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions ( onNext = {
-                focusManager.moveFocus(
-                    focusDirection = FocusDirection.Next,
-                )
-            })
-        )
+            )
+        }
 
         Row(verticalAlignment = Alignment.Bottom) {
             TextField(
@@ -138,30 +142,36 @@ fun CompetitorAddForm(item : Competitor, viewModel: CompetitorViewModel, context
 
 
             )
-            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(stringResource(R.string.bib_color), fontSize = 10.sp)
-                Row{
-                    for ((j, color) in viewModel.colorPallete.withIndex()) {
-                        val c = Color(color)
-                        val colors = ButtonColors(c, c, c, c)
-                        Box(
-                            Modifier
-                                .width(50.dp)
-                                .background(
-                                    color = if (bib.bib_color == j) Color.LightGray else Color.Unspecified,
-                                    RectangleShape
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Button(
-                                {
-                                    bib = Bib(bib.bib_number, j)
-                                    onItemChanged(item.copy(bib = bib))
-                                },
-                                colors = colors,
-                                shape = RectangleShape,
-                                modifier = Modifier.width(40.dp).focusRequester(focusRequester).focusable()
-                            ) {}
+            if(settings.value!!.use_colors) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(stringResource(R.string.bib_color), fontSize = 10.sp)
+                    Row {
+                        for ((j, color) in viewModel.colorPallete.withIndex()) {
+                            val c = Color(color)
+                            val colors = ButtonColors(c, c, c, c)
+                            Box(
+                                Modifier
+                                    .width(50.dp)
+                                    .background(
+                                        color = if (bib.bib_color == j) Color.LightGray else Color.Unspecified,
+                                        RectangleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Button(
+                                    {
+                                        bib = Bib(bib.bib_number, j)
+                                        onItemChanged(item.copy(bib = bib))
+                                    },
+                                    colors = colors,
+                                    shape = RectangleShape,
+                                    modifier = Modifier.width(40.dp).focusRequester(focusRequester)
+                                        .focusable()
+                                ) {}
+                            }
                         }
                     }
                 }
@@ -182,18 +192,21 @@ fun CompetitorAddForm(item : Competitor, viewModel: CompetitorViewModel, context
             Spacer(Modifier.weight(0.33f))
         }
 
-        Spacer(Modifier.height(8.dp))
-
-        TextField(email, {updated -> email = updated},
-            label = {Text("e-mail")},
-            modifier = Modifier
-                .fillMaxWidth()
-                .onFocusChanged({ focusState ->
-                    if (!focusState.isFocused) {
-                        onItemChanged(item.copy(email = email)) // changes upstream
-                    }
-                })
-                .focusRequester(focusRequester))
+        if(settings.value!!.use_email) {
+            Spacer(Modifier.height(8.dp))
+            TextField(
+                email, { updated -> email = updated },
+                label = { Text("e-mail") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged({ focusState ->
+                        if (!focusState.isFocused) {
+                            onItemChanged(item.copy(email = email)) // changes upstream
+                        }
+                    })
+                    .focusRequester(focusRequester)
+            )
+        }
 
     }
 

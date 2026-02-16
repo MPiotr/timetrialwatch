@@ -19,6 +19,11 @@ fun getDatabaseCallbacks(context : Context) : RoomDatabase.Callback = object : R
         cv.put("start_interval_seconds", 15)
         cv.put("start_initial_offset_seconds", 30)
         cv.put("competition_start_time", 0L)
+        cv.put("use_name", 1)
+        cv.put("use_colors", 1)
+        cv.put("use_email", 1)
+        cv.put("play_start_sound", 1)
+        cv.put("automatic_start", 0)
         db.insert("info", OnConflictStrategy.REPLACE, cv)
     }
 

@@ -45,6 +45,8 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier)
 
     val showStopDialog = remember { mutableStateOf(false)}
 
+    if(vSettings == null) return
+
 
     Scaffold(modifier = modifier.fillMaxSize(),
         topBar = {
@@ -123,7 +125,7 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier)
                         else
                             MaterialTheme.colorScheme.surface, RectangleShape), viewModel,
                             {
-                                if(!viewModel.startSoundPlaying){
+                                if(!viewModel.startSoundPlaying && vSettings!!.play_start_sound){
                                     viewModel.onSoundStart()
                                     viewModel.soundPool!!.play(viewModel.soundId!!, 1f, 1f, 1, 0, 1f )// .start()
                                 }
