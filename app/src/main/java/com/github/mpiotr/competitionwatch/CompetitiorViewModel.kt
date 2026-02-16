@@ -295,11 +295,10 @@ class CompetitorViewModel(application : Application,
     fun arrangeStartTimes()
     {   _preStartUpdateComplete.value = false
         viewModelScope.launch {
-            Log.d("START", "launched")
-
+            val _settings = dao.settings().first()
             //val comp_start_time = settings.value?.competition_start_time ?: 0L
-            val start_interval = settings.value!!.start_interval_seconds
-            val start_offset = settings.value!!.start_initial_offset_seconds
+            val start_interval = _settings.start_interval_seconds
+            val start_offset = _settings.start_initial_offset_seconds
             val arranged = competitorsStateFlow.value.sortedWith { a, b ->
                 if (a.group != b.group)
                     _groupIndex[a.group]?.minus(_groupIndex[b.group] ?: 0) ?: 0
