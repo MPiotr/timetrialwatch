@@ -1,3 +1,5 @@
+import org.gradle.internal.impldep.org.apache.sshd.client.auth.keyboard.UserInteraction
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -21,6 +23,16 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("/home/piotr/AndroidStudioProjects/keystore/mykeys.jks")
+            storePassword =  ""
+            keyAlias = "key0"
+            keyPassword = ""
+        }
+    }
+
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -28,6 +40,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

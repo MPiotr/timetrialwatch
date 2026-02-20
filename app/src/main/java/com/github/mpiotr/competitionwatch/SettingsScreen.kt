@@ -13,11 +13,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -26,6 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,190 +37,330 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun SettingsScreen(context: Context, viewModel: CompetitorViewModel, modifier : Modifier, onNavigateToList : () -> Unit)
+fun SettingsScreen(viewModel: CompetitorViewModel, modifier : Modifier)
 {
     val focusManager = LocalFocusManager.current
     Scaffold(modifier = modifier.fillMaxSize(),
         topBar = {
-            Row(Modifier.height(64.dp)//.background(Color.Blue)
+            Row(Modifier.height(64.dp)
                 .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically) {
-                Text("Setup",
+                Text(stringResource(R.string.settings),
                     fontSize = 24.sp,
                     modifier = Modifier.padding(start = 16.dp))
-            }
-        },
-        bottomBar = {
-            Row(horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()) {
-                 Button(
-                    {
-                        focusManager.clearFocus(force = true)
-                        onNavigateToList()
-                    },
-                    Modifier.padding(bottom = 20.dp, start = 20.dp, end = 20.dp),
-                    content = { Text(stringResource(R.string.to_list)) },
-                )
             }
         }
     )
     { innerPadding ->
+        val settings = viewModel.settings.collectAsState()
+        if(settings.value == null) return@Scaffold
+        if(viewModel.timeTrialStarted.collectAsState().value) {
+            Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Text("The competition has started")
+                }
+            }
+            return@Scaffold
+        }
 
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp),
+        val groups = viewModel.groups.collectAsState()
+        var showResetAlert by remember { mutableStateOf(false) }
+        val info_string = viewModel.datasetInfo.collectAsState()
+        val info_text = info_string.value
+
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth().padding(innerPadding))
         {
-            val settings = viewModel.settings.collectAsState()
-            if(settings.value == null) return@Scaffold
-            if(viewModel.timeTrialStarted.collectAsState().value) {
-                Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxSize()) {
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Text("The competition has started")
-                    }
-                }
-                return@Scaffold
-            }
-
-            val groups = viewModel.groups.collectAsState()
-            var showResetAlert by remember { mutableStateOf(false) }
-            val info_string = viewModel.datasetInfo.collectAsState()
-            val info_test = info_string.value
-
-            Text(info_test, modifier = Modifier.fillMaxWidth())
-            Button({showResetAlert = true}) { Text(stringResource(R.string.reset_data)) }
-                if (showResetAlert)
-                {
-                    AlertDialog( {showResetAlert = false},
+            item {
+                Text(info_text, modifier = Modifier.fillMaxWidth())
+                Button(
+                    { showResetAlert = true },
+                    colors = ButtonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError,
+                        disabledContentColor = MaterialTheme.colorScheme.secondary,
+                        disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )
+                )
+                { Text(stringResource(R.string.reset_data)) }
+                if (showResetAlert) {
+                    AlertDialog(
+                        { showResetAlert = false },
                         confirmButton = {
                             Button({
                                 showResetAlert = false
                                 viewModel.resetData()
                             }
 
-                                ) {Text("Yes")} },
-                        dismissButton = {Button({showResetAlert = false}, ) {Text("No")} },
-                        title = {Text(stringResource(R.string.reset_data_title))}
+                            ) { Text("Yes") }
+                        },
+                        dismissButton = { Button({ showResetAlert = false },) { Text("No") } },
+                        title = { Text(stringResource(R.string.reset_data_title)) }
                     )
                 }
 
 
 
-            HorizontalDivider(modifier = Modifier.padding(4.dp, 9.dp))
+                HorizontalDivider(modifier = Modifier.padding(4.dp, 9.dp))
 
-            var local_start_interval by remember{mutableStateOf(15)}
-            TextField(
-                local_start_interval.toString(),
-                { updated ->
-                    local_start_interval = updated.toIntOrNull() ?: 15
-                },
+                val interval_initial_value = settings.value!!.start_interval_seconds.toString()
+                var local_start_interval by remember { mutableStateOf(interval_initial_value) }
+                LaunchedEffect(interval_initial_value) {
+                    local_start_interval = interval_initial_value
+                }
+                TextField(
+                    local_start_interval,
+                    { updated ->
+                        local_start_interval = updated
+                    },
 
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                label = { Text("Starting interval, s") },
-                modifier = Modifier.onFocusChanged(
-                    { viewModel.onSettingsUpdated(settings.value!!.copy(start_interval_seconds = local_start_interval)) })
-                    .fillMaxWidth().padding(top = 16.dp)
-            )
-            Spacer(Modifier.height(8.dp))
-            Text("Groups", fontSize = 20.sp)
-
-            LazyColumn(Modifier.background(MaterialTheme.colorScheme.surface)) {
-                for (g in groups.value) {
-                    item {
-                        HorizontalDivider(modifier = Modifier.padding(4.dp, 9.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(onNext = {
+                        focusManager.moveFocus(
+                            focusDirection = FocusDirection.Next,
                         )
+                    }),
+                    label = { Text(stringResource(R.string.starting_interval)) },
+                    modifier = Modifier.onFocusChanged(
                         {
-                            var gname by remember{mutableStateOf(g.name)}
-                            TextField(
-                                gname,
-                                { updated ->
-                                    gname = updated
-                                },
-                                label = { Text(stringResource(R.string.group_name)) },
-                                modifier = Modifier.onFocusChanged(
-                                    {viewModel.onGroupUpdated(
-                                        g.copy(name = gname) )})
-                            )
+                            val newvalue = local_start_interval.toIntOrNull()
+                            if (newvalue != null)
+                                viewModel.onSettingsUpdated(
+                                    settings.value!!.copy(
+                                        start_interval_seconds = newvalue
+                                    )
+                                )
+                            else
+                                local_start_interval = interval_initial_value
+                        })
+                        .fillMaxWidth().padding(top = 16.dp)
+
+                )
+
+                val offset_initial_value = settings.value!!.start_initial_offset_seconds.toString()
+                var local_start_offset by remember { mutableStateOf(offset_initial_value) }
+                LaunchedEffect(offset_initial_value) { local_start_offset = offset_initial_value }
+                TextField(
+                    local_start_offset,
+                    { updated ->
+                        local_start_offset = updated
+                    },
+
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(onNext = {
+                        focusManager.moveFocus(
+                            focusDirection = FocusDirection.Next,
+                        )
+                    }),
+                    label = { Text(stringResource(R.string.starting_offset)) },
+                    modifier = Modifier.onFocusChanged({ focusState ->
+                        if (!focusState.isFocused) {
+                            val newvalue = local_start_offset.toIntOrNull()
+                            if (newvalue != null)
+                                viewModel.onSettingsUpdated(
+                                    settings.value!!.copy(
+                                        start_initial_offset_seconds = newvalue
+                                    )
+                                )
+                            else local_start_offset = offset_initial_value
                         }
-                        Row(modifier = Modifier.padding(10.dp)) {
-                            Column {
-                                var numSplits by remember { mutableStateOf(g.num_splits_men.toString()) }
-                                Text( stringResource(R.string.men))
+                    })
+                        .fillMaxWidth().padding(top = 16.dp)
+                )
+            }
+            item {
+                Column(horizontalAlignment = Alignment.Start) {
+                    // Use participant name checkbox
+                    val use_name_initial = settings.value!!.use_name
+                    var local_use_name by remember { mutableStateOf(use_name_initial) }
+                    LaunchedEffect(use_name_initial) { local_use_name = use_name_initial }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(local_use_name, { newvalue ->
+                            viewModel.onSettingsUpdated(settings.value!!.copy(use_name = newvalue))
+                        })
+                        Text(stringResource(R.string.use_name))
+                    }
+
+                    // Use bibs colors checkbox
+                    val use_color_initial = settings.value!!.use_colors
+                    var local_use_use_colors by remember { mutableStateOf(use_color_initial) }
+                    LaunchedEffect(use_color_initial) { local_use_use_colors = use_color_initial }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(local_use_use_colors, { newvalue ->
+                            viewModel.onSettingsUpdated(settings.value!!.copy(use_colors = newvalue))
+                        })
+                        Text(stringResource(R.string.use_bib_color))
+                    }
+                    Text(stringResource(R.string.use_bib_color_explanation), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 48.dp))
+
+
+                    // Use email checkbox
+                    val use_email_initial = settings.value!!.use_email
+                    var local_use_email by remember { mutableStateOf(use_email_initial) }
+                    LaunchedEffect(use_email_initial) { local_use_email = use_email_initial }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(local_use_email, { newvalue ->
+                            viewModel.onSettingsUpdated(settings.value!!.copy(use_email = newvalue))
+                        })
+                        Text(stringResource(R.string.use_email))
+                    }
+                    Text(stringResource(R.string.use_email_explanation), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 48.dp))
+
+                    // Play start signal checkbox
+                    val play_sound_initial = settings.value!!.play_start_sound
+                    var local_play_sound by remember { mutableStateOf(play_sound_initial) }
+                    LaunchedEffect(play_sound_initial) { local_play_sound = play_sound_initial }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(local_play_sound, { newvalue ->
+                            viewModel.onSettingsUpdated(settings.value!!.copy(play_start_sound = newvalue))
+                        })
+                        Text(stringResource(R.string.play_start_sound))
+                    }
+                    Text(stringResource(R.string.play_start_sound_explanation), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 48.dp) )
+                }
+
+                    Spacer(Modifier.height(8.dp))
+                    Text(stringResource(R.string.groups), fontSize = 20.sp)
+
+            }
+
+
+            if(groups.value != null) {
+                    for (g in groups.value) {
+                        item {
+                            HorizontalDivider(modifier = Modifier.padding(4.dp, 9.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            {
+                                var gname by remember { mutableStateOf(g.name) }
                                 TextField(
-                                    numSplits,
+                                    gname,
                                     { updated ->
-                                        numSplits = updated
-                                        val newvalue = updated.toIntOrNull()
-                                        if(newvalue != null) {
-                                            viewModel.onGroupUpdated(
-                                                g.copy(
-                                                    num_splits_men = newvalue
-                                                )
-                                            )
-                                        }
+                                        gname = updated
                                     },
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    label = { Text("Max number of splits") },
-                                    modifier = Modifier.width(150.dp).onFocusChanged(
+                                    label = { Text(stringResource(R.string.group_name)) },
+                                    keyboardOptions = KeyboardOptions(
+                                        imeAction = ImeAction.Next
+                                    ),
+                                    keyboardActions = KeyboardActions(onNext = {
+                                        focusManager.moveFocus(
+                                            focusDirection = FocusDirection.Next,
+                                        )
+                                    }),
+                                    modifier = Modifier.onFocusChanged(
                                         {
-                                            if(numSplits.toIntOrNull() == null) {
-                                                numSplits = g.num_splits_men.toString()
-                                            }
+                                            viewModel.onGroupUpdated(
+                                                g.copy(name = gname)
+                                            )
                                         })
                                 )
                             }
-                            Spacer(modifier = Modifier.weight(1.0f))
-                            Column {
-                                var numSplits by remember { mutableStateOf(g.num_splits_women.toString()) }
-                                Text(stringResource(R.string.women))
-                                TextField(
-                                    numSplits,
-                                    { updated ->
-                                        numSplits = updated
-                                        val newvalue = updated.toIntOrNull()
-                                        if(newvalue != null) {
-                                            viewModel.onGroupUpdated(
-                                                g.copy(
-                                                    num_splits_men = newvalue
+                            Row(modifier = Modifier.padding(10.dp)) {
+                                Column {
+                                    var numSplits by remember { mutableStateOf(g.num_splits_men.toString()) }
+                                    Text(stringResource(R.string.men))
+                                    TextField(
+                                        numSplits,
+                                        { updated ->
+                                            numSplits = updated
+                                            val newvalue = updated.toIntOrNull()
+                                            if (newvalue != null) {
+                                                viewModel.onGroupUpdated(
+                                                    g.copy(
+                                                        num_splits_men = newvalue
+                                                    )
                                                 )
-                                            )
-                                        }
-                                    },
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    label = { Text("Max number of splits") },
-                                    modifier = Modifier.width(150.dp).onFocusChanged(
-                                        {
-                                            if(numSplits.toIntOrNull() == null) {
-                                                numSplits = g.num_splits_women.toString()
                                             }
-                                        })
-                                )
+                                        },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                                        keyboardActions = KeyboardActions(onNext = {
+                                            focusManager.moveFocus(
+                                                focusDirection = FocusDirection.Next,
+                                            )
+                                        }),
+                                        label = { Text(stringResource(R.string.max_number_of_splits)) },
+                                        modifier = Modifier.width(150.dp).onFocusChanged(
+                                            {
+                                                if (numSplits.toIntOrNull() == null) {
+                                                    numSplits = g.num_splits_men.toString()
+                                                }
+                                            })
+                                    )
+                                }
+                                Spacer(modifier = Modifier.weight(1.0f))
+                                Column {
+                                    var numSplits by remember { mutableStateOf(g.num_splits_women.toString()) }
+                                    Text(stringResource(R.string.women))
+                                    TextField(
+                                        numSplits,
+                                        { updated ->
+                                            numSplits = updated
+                                            val newvalue = updated.toIntOrNull()
+                                            if (newvalue != null) {
+                                                viewModel.onGroupUpdated(
+                                                    g.copy(
+                                                        num_splits_women = newvalue
+                                                    )
+                                                )
+                                            }
+                                        },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                                        keyboardActions = KeyboardActions(onNext = {
+                                            focusManager.moveFocus(
+                                                focusDirection = FocusDirection.Next,
+                                            )
+                                        }),
+                                        label = { Text(stringResource(R.string.max_number_of_splits)) },
+                                        modifier = Modifier.width(150.dp).onFocusChanged(
+                                            {
+                                                if (numSplits.toIntOrNull() == null) {
+                                                    numSplits = g.num_splits_women.toString()
+                                                }
+                                            })
+                                    )
+                                }
                             }
                         }
                     }
-                }
+                    item {
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            Spacer(Modifier.weight(1.0f))
+                            FloatingActionButton(
+                                {
+                                    viewModel.onCreateNewGroup()
+                                },
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                shape = CircleShape
+                            ) {
+                                Icon(Icons.Filled.Add, "Localized description")
+                            }
+                        }
+                    }
+
             }
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Spacer(Modifier.weight(1.0f))
-                FloatingActionButton({
-                    viewModel.onCreateNewGroup()
-                }, modifier = Modifier.padding(horizontal = 16.dp), shape = CircleShape) {
-                    Icon(Icons.Filled.Add, "Localized description")
-                }
-            }
+
 
         }
     }

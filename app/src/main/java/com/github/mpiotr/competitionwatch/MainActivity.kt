@@ -2,7 +2,6 @@ package com.github.mpiotr.competitionwatch
 
 import android.media.SoundPool
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -40,6 +39,8 @@ class MainActivity : ComponentActivity() {
         val viewModel = CompetitorViewModel(this.application, dao, database)
         val soundPool = SoundPool.Builder().setMaxStreams(1).build()
         val soundId =  soundPool.load(this, R.raw.racestart_wav, 1)
+        viewModel.soundPool = soundPool
+        viewModel.soundId = soundId
 
         setContent {
             AppTheme {
@@ -49,6 +50,7 @@ class MainActivity : ComponentActivity() {
                         val snackbarHostState = remember { SnackbarHostState() }
                         SnackbarHost(snackbarHostState)
                     },
+                    bottomBar = { NavigationBar(Modifier, application, viewModel, navController ) }
                 )
                 { paddingValues ->
                     NavHost(navController = navController, startDestination = "SettingScreen") {
@@ -58,29 +60,19 @@ class MainActivity : ComponentActivity() {
                                 Modifier.padding(paddingValues),
                                 {
                                         navController.navigate("AddCompetitor")
-                                },
-                                {
-                                    Log.d("START", "on Navigate")
-                                    viewModel.arrangeStartTimes() // Only for late-registered competitors, normally on start button
-                                    navController.navigate("TimeTrial")
-                                },
-                                {
-                                    navController.navigate("SettingScreen")
                                 }
                             )
                         }
                         composable("SettingScreen") {
                             SettingsScreen (
-                                this@MainActivity,
                                 viewModel,
                                 Modifier.padding(paddingValues),
-                                {
-                                    navController.navigate("Competitors") })
+                               )
                         }
                         composable("AddCompetitor")
                          {
                             AddCompetitorDialog(
-                                this@MainActivity,
+                                application,
                                 viewModel,
                                 Modifier.padding(paddingValues),
                                 {
@@ -93,25 +85,17 @@ class MainActivity : ComponentActivity() {
                             TimeTrialScreen(
                                 viewModel,
                                 Modifier.padding(paddingValues),
-                                soundPool,
-                                soundId,
-                                { navController.navigate("Competitors") },
-                                { navController.navigate("SplitScreen") })
-
+                                )
                         }
                         composable("SplitScreen") {
                             SplitScreen(
                                 viewModel,
-                                Modifier.padding(paddingValues),
-                                { navController.navigate("Competitors") },
-                                { navController.navigate("TimeTrial") },
-                                { navController.navigate("Results") })
+                                Modifier.padding(paddingValues))
                         }
                         composable("Results") {
                             ResultScreen (
                                 viewModel,
-                                Modifier.padding(paddingValues),
-                                { navController.navigate("SplitScreen") },
+                                Modifier.padding(paddingValues)
                                )
                         }
                     }

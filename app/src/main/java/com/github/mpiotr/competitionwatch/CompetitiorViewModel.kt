@@ -4,6 +4,7 @@ package com.github.mpiotr.competitionwatch
 import android.app.Application
 import android.content.Intent
 import android.graphics.Color
+import android.media.SoundPool
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +48,9 @@ class CompetitorViewModel(application : Application,
     val colorNames : List<String> = listOf("Blue", "Green", "Red", "Black", "Yellow")
     var colorOrder : MutableList<Int> = mutableListOf()
 
+    var soundPool : SoundPool? = null
+    var soundId : Int? = null
+
 
     var waitDataset = false
 
@@ -62,12 +66,12 @@ class CompetitorViewModel(application : Application,
     val main_group_name = application.resources.getString(R.string.main_group_name)
     val groups = dao.groups().stateIn(viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        listOf(Groups(1L)))
+        null)
     fun onCreateNewGroup()
     {
         viewModelScope.launch {
                 val newid = dao.groups().first().size + 1L
-                val new_group = Groups(newid, "New Group Name")
+                val new_group = Groups(newid, application.getString(R.string.newgroupname).format(newid))
                 dao.insertGroup(new_group)
 
         }
@@ -79,8 +83,6 @@ class CompetitorViewModel(application : Application,
     }
     val _groupIndex = mutableMapOf(main_group_name to 0)
 
-// return colorSet.map{Pair(colorPallete[it], colorNames[it])}
-
 
     val competitorCountFlow = dao.competitorCount().stateIn(
         viewModelScope,
@@ -88,7 +90,6 @@ class CompetitorViewModel(application : Application,
         0
     )
     var competitorCount: Int = 0
-    //var registeredBibs : MutableSet<Bib>? = null
 
 
     val timeFlow =  flow { while(true) {
@@ -120,10 +121,10 @@ class CompetitorViewModel(application : Application,
 
     val currentItemMap = mutableMapOf<Int, StateFlow<Competitor?>>()
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun currentItem(id: Int) : StateFlow<Competitor?> {
-        return currentItemMap.getOrPut(id) {
+    fun currentItem(widgetId: Int) : StateFlow<Competitor?> {
+        return currentItemMap.getOrPut(widgetId) {
             _currentBib
-                .map { it[id] }
+                .map { it[widgetId] }
                 .filterNotNull()
                 .flatMapLatest { bib ->
                     dao.getCompetitor(bib.bib_number, bib.bib_color)
@@ -170,9 +171,7 @@ class CompetitorViewModel(application : Application,
     init {
         viewModelScope.launch {
             competitorCountFlow.collect {value -> competitorCount = value }
-           // _registeredBibs.collect { value -> registeredBibs = value.toMutableSet()}
         }
-
     }
 
 
@@ -191,8 +190,6 @@ class CompetitorViewModel(application : Application,
         false)
 
 
-    //private val _competitorsStateFlow = MutableStateFlow(competitors)
-    //val competitorsStateFlow : StateFlow<List<Competitor> > =  _competitorsStateFlow.asStateFlow()
     val competitorsStateFlow : StateFlow<List<Competitor> > =
                      dao.getAll().stateIn(viewModelScope,
                                 SharingStarted.WhileSubscribed(5_000),
@@ -278,7 +275,7 @@ class CompetitorViewModel(application : Application,
                 dao.deleteAllCompetitors()
                 dao.deleteAllGroups()
                 dao.deleteAllSettings()
-                val defaultSettings = Settings(1L, 15, 0L)
+                val defaultSettings = Settings(1L, 15, 30, 0L)
                 dao.insertSettings(defaultSettings)
 
                 val defaultGroup = Groups(
@@ -298,19 +295,18 @@ class CompetitorViewModel(application : Application,
     fun arrangeStartTimes()
     {   _preStartUpdateComplete.value = false
         viewModelScope.launch {
-            Log.d("START", "launched")
-
+            val _settings = dao.settings().first()
             //val comp_start_time = settings.value?.competition_start_time ?: 0L
-            val start_interval = settings.value!!.start_interval_seconds
+            val start_interval = _settings.start_interval_seconds
+            val start_offset = _settings.start_initial_offset_seconds
             val arranged = competitorsStateFlow.value.sortedWith { a, b ->
                 if (a.group != b.group)
                     _groupIndex[a.group]?.minus(_groupIndex[b.group] ?: 0) ?: 0
                 else if (a.sex != b.sex) -a.sex + b.sex
                 else a.bib.compareTo(b.bib)
             }.filter({!it.started}).mapIndexed { index, competitor ->
-                Log.d("START", "$index: $competitor, ${!competitor.started} && ${competitor.startTime == 0L} ${competitor.startTime}")
-                if (!competitor.started && competitor.startTime == 0L) {
-                        competitor.copy(startTime = index * 1000L * start_interval + 30000)
+                if (!competitor.started ) {
+                        competitor.copy(startTime = index * 1000L * start_interval + start_offset*1000)
 
                 }
                 else competitor
@@ -336,7 +332,7 @@ class CompetitorViewModel(application : Application,
         competitorsStateFlow.map { list ->
             list.filter { !it.started }
                 .sortedBy { it.startTime }
-                .take(5)
+                .take(7)
         }
         .distinctUntilChanged{old, new ->
                             old.map { it.id to it.started } ==
@@ -345,6 +341,15 @@ class CompetitorViewModel(application : Application,
         .stateIn(viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptyList<Competitor>())
+
+    val startingOrder: StateFlow<List<Competitor>> =
+        competitorsStateFlow.map { list ->
+            list.filter { !it.started }
+                .sortedBy { it.startTime }
+
+        }.stateIn(viewModelScope,
+                started = SharingStarted.WhileSubscribed(1_000),
+                initialValue = emptyList<Competitor>())
 
     fun getResults() : Map<Pair<Int,String>,List<Competitor>> {
         val all_results = competitorsStateFlow.value.mapNotNull { if(it.splits.size > 0) it else null }.sortedWith { a, b ->
@@ -454,8 +459,10 @@ class CompetitorViewModel(application : Application,
 
     fun isCurrentCompetitorFinishing(id : Int) : StateFlow<Boolean> {
         return combine(currentItem(id), groups) { competitor, allgroup ->
+            if(allgroup == null) return@combine false
             val _group = competitor?.group ?: return@combine false
-            val group_info = allgroup.first { _group == it.name }
+            val group_info = allgroup.firstOrNull() { _group == it.name } ?: return@combine false
+
             if (competitor.sex == 1)
                 competitor.splits.size == group_info.num_splits_men - 1
             else

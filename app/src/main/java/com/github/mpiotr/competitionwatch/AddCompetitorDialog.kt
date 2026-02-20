@@ -1,6 +1,6 @@
 package com.github.mpiotr.competitionwatch
 
-import android.content.Context
+import android.app.Application
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,8 +28,9 @@ import androidx.compose.ui.unit.sp
 import com.github.mpiotr.competitionwatch.dataset.Bib
 
 @Composable
-fun AddCompetitorDialog(context: Context, viewModel: CompetitorViewModel, modifier : Modifier, onNavigateToList : () -> Unit)
+fun AddCompetitorDialog(application: Application, viewModel: CompetitorViewModel, modifier : Modifier, onNavigateToList : () -> Unit)
 {
+    val context = application.applicationContext
     val focusManager = LocalFocusManager.current
     val edit = viewModel.editCompetitor.collectAsState()
     val editItem = viewModel.currentItem(0).collectAsState()
@@ -47,15 +48,17 @@ fun AddCompetitorDialog(context: Context, viewModel: CompetitorViewModel, modifi
 
     Scaffold(modifier = modifier.fillMaxSize(),
         topBar = {
+            if(item == null) return@Scaffold
             Row(Modifier.height(64.dp)//.background(Color.Blue)
                 .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically) {
-                Text(if(edit.value) "Edit Participant" else "Add new participant",
+                Text(if(edit.value) stringResource(R.string.edit_participant) else stringResource(R.string.add_new_participant),
                     fontSize = 24.sp,
                     modifier = Modifier.padding(start = 16.dp))
             }
         },
         bottomBar = {
+            if(item == null) return@Scaffold
             Row(horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()) {
                 if(edit.value){
@@ -71,7 +74,7 @@ fun AddCompetitorDialog(context: Context, viewModel: CompetitorViewModel, modifi
                         },
                         Modifier.padding(bottom = 20.dp, start = 20.dp, end = 20.dp),
                         content = { Text(stringResource(R.string.save)) },
-                        enabled = (item!!.bib.bib_number != 0)
+                        enabled = (item?.bib?.bib_number != 0) ?: false
                     )
                 }
                 else {
@@ -93,7 +96,7 @@ fun AddCompetitorDialog(context: Context, viewModel: CompetitorViewModel, modifi
                     Button(
                             {onNavigateToList()},
                     Modifier.padding(bottom = 20.dp, start = 20.dp, end = 20.dp),
-                    content = { Text(stringResource(R.string.to_list)) },
+                    content = { Text(stringResource(R.string.close)) },
                     )
                 }
 
@@ -101,6 +104,7 @@ fun AddCompetitorDialog(context: Context, viewModel: CompetitorViewModel, modifi
         }
     )
     { innerPadding ->
+        if(item == null) return@Scaffold
         Column(Modifier.fillMaxWidth().padding(innerPadding)) {
             CompetitorAddForm(
                 item!!,
