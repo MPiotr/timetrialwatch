@@ -228,14 +228,18 @@ class CompetitorViewModel(application : Application,
         SharingStarted.WhileSubscribed(5_000),
         0L)
 
-    fun formattedRaceTime(nowms : Long) : String {
-        val duration = (nowms - startTime.value).milliseconds
-        val competitionTime = duration.toComponents {
-                hours, minutes, seconds, nanoseconds ->
-            val centiseconds = (nanoseconds / 10e7.toFloat()).toInt()
-            "%02d:%02d:%02d.%d".format(hours, minutes, seconds, centiseconds)  }
-        return competitionTime
-    }
+    val formattedRaceTime : StateFlow<String> =
+        combine(startTime, timeFlow) { startTime, nowms ->
+            val duration = (nowms - startTime).milliseconds
+            val competitionTime = duration.toComponents {
+                    hours, minutes, seconds, nanoseconds ->
+                val centiseconds = (nanoseconds / 10e7.toFloat()).toInt()
+                "%02d:%02d:%02d.%d".format(hours, minutes, seconds, centiseconds)  }
+            competitionTime
+
+    }.stateIn(viewModelScope,
+    SharingStarted.WhileSubscribed(1_000),
+    "")
 
     fun onItemChanged(updated: Competitor)
     {

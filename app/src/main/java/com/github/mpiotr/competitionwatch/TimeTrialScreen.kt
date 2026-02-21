@@ -102,9 +102,9 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier)
 
             } else {
                 val nextStartingCompetitors = viewModel.nextStartingCompetitors.collectAsState()
-                val time by viewModel.timeFlow.collectAsState()
+                val timeString by viewModel.formattedRaceTime.collectAsState()
                 Text(
-                    viewModel.formattedRaceTime(time),
+                    timeString,
                     Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(top = 10.dp),

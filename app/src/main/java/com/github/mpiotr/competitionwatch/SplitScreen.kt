@@ -11,6 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -36,8 +37,9 @@ fun SplitScreen(viewModel: CompetitorViewModel, modifier: Modifier)
     { innerPadding ->
         Column(Modifier.fillMaxWidth().padding(innerPadding)) {
             if(viewModel.startTime.collectAsState().value != 0L) {
+                val timeString by viewModel.formattedRaceTime.collectAsState()
                 Text(
-                    viewModel.formattedRaceTime(nowms.value),
+                    timeString,
                     Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(top = 10.dp),
