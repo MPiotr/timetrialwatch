@@ -61,4 +61,8 @@
     <string name="use_email_explanation">The email is used for sending the result  to participants</string>
     <string name="play_start_sound_explanation">The sound is for reference. The start is still manual, by pressing the button. The starting order may also be changed, by pressing starting buttons of participant in any order</string>
     <string name="list_of_participants_short">Participants</string>
+    <string name="auto_start">Auto start</string>
+    <string name="auto_start_explanation">If this box is checked participant start automatically, by start signal</string>
+    <string name="clear_competition_data">Clear race data</string>
+    <string name="are_you_sure">Are you sure?</string>
 </resources>

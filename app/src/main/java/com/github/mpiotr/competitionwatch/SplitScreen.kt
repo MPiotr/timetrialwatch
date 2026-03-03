@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,7 +23,6 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun SplitScreen(viewModel: CompetitorViewModel, modifier: Modifier)
 {
-    val nowms = viewModel.timeFlow.collectAsState()
     Scaffold(modifier = modifier.fillMaxSize(),
         topBar = {
             Row(Modifier.height(64.dp)
@@ -38,13 +38,11 @@ fun SplitScreen(viewModel: CompetitorViewModel, modifier: Modifier)
         Column(Modifier.fillMaxWidth().padding(innerPadding)) {
             if(viewModel.startTime.collectAsState().value != 0L) {
                 val timeString by viewModel.formattedRaceTime.collectAsState()
-                Text(
-                    timeString,
-                    Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(top = 10.dp),
-                    fontSize = 30.sp
-                )
+                AnimatedTimer(timeString, Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(top = 10.dp),
+                    style = MaterialTheme.typography.headlineMedium)
+
                 CompetitorSplitItem(viewModel, modifier, 0)
                 HorizontalDivider()
                 CompetitorSplitItem(viewModel, modifier, 1)

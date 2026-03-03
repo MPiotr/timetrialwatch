@@ -76,6 +76,7 @@ fun SettingsScreen(viewModel: CompetitorViewModel, modifier : Modifier)
 
         val groups = viewModel.groups.collectAsState()
         var showResetAlert by remember { mutableStateOf(false) }
+        var showResetAlert2 by remember { mutableStateOf(false) }
         val info_string = viewModel.datasetInfo.collectAsState()
         val info_text = info_string.value
 
@@ -110,9 +111,35 @@ fun SettingsScreen(viewModel: CompetitorViewModel, modifier : Modifier)
                         title = { Text(stringResource(R.string.reset_data_title)) }
                     )
                 }
+            }
+            item {
+                Button(
+                    { showResetAlert2 = true },
+                    colors = ButtonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary,
+                        contentColor = MaterialTheme.colorScheme.onTertiary,
+                        disabledContentColor = MaterialTheme.colorScheme.secondary,
+                        disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )
+                )
+                { Text(stringResource(R.string.clear_competition_data)) }
+                if (showResetAlert2) {
+                    AlertDialog(
+                        { showResetAlert2 = false },
+                        confirmButton = {
+                            Button({
+                                showResetAlert2 = false
+                                viewModel.clearCompetition()
+                            }
 
-
-
+                            ) { Text("Yes") }
+                        },
+                        dismissButton = { Button({ showResetAlert2 = false },) { Text("No") } },
+                        title = { Text(stringResource(R.string.are_you_sure)) }
+                    )
+                }
+            }
+            item {
                 HorizontalDivider(modifier = Modifier.padding(4.dp, 9.dp))
 
                 val interval_initial_value = settings.value!!.start_interval_seconds.toString()
@@ -235,6 +262,18 @@ fun SettingsScreen(viewModel: CompetitorViewModel, modifier : Modifier)
                         Text(stringResource(R.string.play_start_sound))
                     }
                     Text(stringResource(R.string.play_start_sound_explanation), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 48.dp) )
+
+                    // Auto start  checkbox
+                    val auto_start_initial = settings.value!!.automatic_start
+                    var local_auto_start by remember { mutableStateOf(auto_start_initial) }
+                    LaunchedEffect(auto_start_initial) { local_auto_start = auto_start_initial }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(local_auto_start, { newvalue ->
+                            viewModel.onSettingsUpdated(settings.value!!.copy(automatic_start = newvalue))
+                        })
+                        Text(stringResource(R.string.auto_start))
+                    }
+                    Text(stringResource(R.string.auto_start_explanation), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 48.dp) )
                 }
 
                     Spacer(Modifier.height(8.dp))

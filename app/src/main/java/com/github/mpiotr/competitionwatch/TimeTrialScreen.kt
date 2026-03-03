@@ -1,5 +1,8 @@
 package com.github.mpiotr.competitionwatch
 
+import android.util.Log
+import android.view.WindowManager
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
@@ -19,6 +22,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +39,14 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier)
 {
+    val activity = LocalActivity.current
+    DisposableEffect(Unit) {
+        val window = activity?.window
+        window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
     val timeTrialStarted = viewModel.timeTrialStarted.collectAsState()
 
     val vSettings by  viewModel.settings.collectAsState()
@@ -103,13 +115,10 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier)
             } else {
                 val nextStartingCompetitors = viewModel.nextStartingCompetitors.collectAsState()
                 val timeString by viewModel.formattedRaceTime.collectAsState()
-                Text(
-                    timeString,
-                    Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(top = 10.dp),
-                    fontSize = 30.sp
-                )
+                AnimatedTimer(timeString,
+                    Modifier.fillMaxWidth().align(Alignment.CenterHorizontally),
+                    MaterialTheme.typography.headlineMedium )
+
 
                 Text(
                     stringResource(R.string.next_participants_to_start),
@@ -118,18 +127,36 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier)
                         .padding(top = 10.dp),
                     fontSize = 18.sp
                 )
-                LazyColumn(Modifier.weight(1.0f)) {
-                    itemsIndexed(nextStartingCompetitors.value) { ind, competitor ->
-                        CompetitorTimeTrialItem(competitor, Modifier.background(if(ind+1 % 2 == 0)
-                            MaterialTheme.colorScheme.surfaceVariant
-                        else
-                            MaterialTheme.colorScheme.surface, RectangleShape), viewModel,
-                            {
-                                if(!viewModel.startSoundPlaying && vSettings!!.play_start_sound){
-                                    viewModel.onSoundStart()
-                                    viewModel.soundPool!!.play(viewModel.soundId!!, 1f, 1f, 1, 0, 1f )// .start()
-                                }
-                            })
+                if(nextStartingCompetitors.value != null) {
+
+                    LazyColumn(Modifier.weight(1.0f)) {
+                        itemsIndexed(nextStartingCompetitors.value!!) { ind, competitor ->
+                            CompetitorTimeTrialItem(
+                                competitor, ind, vSettings!!.automatic_start, Modifier.background(
+                                    if (ind + 1 % 2 == 0)
+                                        MaterialTheme.colorScheme.surfaceVariant
+                                    else
+                                        MaterialTheme.colorScheme.surface, RectangleShape
+                                ), viewModel,
+                                {
+                                    if (!viewModel.startSoundPlaying && vSettings!!.play_start_sound) {
+                                        viewModel.onSoundStart()
+                                        Log.d("AUDIO", "this : $competitor: ${competitor.startTime} ")
+                                        for( c in nextStartingCompetitors.value)
+                                        {
+                                            Log.d("AUDIO", "$c, ${c.startTime}")
+                                        }
+                                        viewModel.soundPool!!.play(
+                                            viewModel.soundId!!,
+                                            1f,
+                                            1f,
+                                            1,
+                                            0,
+                                            1f
+                                        )
+                                    }
+                                })
+                        }
                     }
                 }
 

@@ -27,7 +27,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -234,7 +233,7 @@ class CompetitorViewModel(application : Application,
             val competitionTime = duration.toComponents {
                     hours, minutes, seconds, nanoseconds ->
                 val centiseconds = (nanoseconds / 10e7.toFloat()).toInt()
-                "%02d:%02d:%02d.%d".format(hours, minutes, seconds, centiseconds)  }
+                "%02d:%02d:%02d.%01d".format(hours, minutes, seconds, centiseconds)  }
             competitionTime
 
     }.stateIn(viewModelScope,
@@ -291,6 +290,22 @@ class CompetitorViewModel(application : Application,
         }
     }
 
+    fun clearCompetition()
+    {
+        viewModelScope.launch {
+            database.withTransaction {
+                val competotors = dao.getAll().first()
+                val settings = dao.settings().first()
+                dao.updateSettings(settings.copy(competition_start_time = 0L))
+                for(c in competotors)
+                {
+                    dao.update(c.copy(startTime = 0L, started = false, finished = false, result = Int.MAX_VALUE, splits = mutableListOf(), gap = null))
+                }
+            }
+        }
+
+    }
+
     val _preStartUpdateComplete = MutableStateFlow(true)
     val startTimeReady : StateFlow<Boolean> = _preStartUpdateComplete.stateIn(viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
@@ -332,19 +347,20 @@ class CompetitorViewModel(application : Application,
         }
     }
 
-      val nextStartingCompetitors: StateFlow<List<Competitor>> =
-        competitorsStateFlow.map { list ->
-            list.filter { !it.started }
-                .sortedBy { it.startTime }
-                .take(7)
-        }
-        .distinctUntilChanged{old, new ->
-                            old.map { it.id to it.started } ==
-                            new.map { it.id to it.started }
-        }
-        .stateIn(viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyList<Competitor>())
+    val nextStartingCompetitors: StateFlow<List<Competitor>?> =
+        combine(competitorsStateFlow, timeFlow) { competitors, time ->
+
+            competitors.filter {
+                !it.started || time - it.startTime < 1500L} // This sorting retains the last started
+                    .sortedWith {a,b ->                     // item for 1.5 sec on top of the list
+                        if(a.started != b.started)
+                            -(if(a.started) 1 else 0) + (if(b.started) 1 else 0)
+                        else (a.startTime - b.startTime).toInt()
+                    }
+                    .take(7)
+        }.stateIn(viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = null)
 
     val startingOrder: StateFlow<List<Competitor>> =
         competitorsStateFlow.map { list ->

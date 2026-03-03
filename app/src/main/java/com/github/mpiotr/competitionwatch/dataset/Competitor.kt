@@ -119,7 +119,7 @@ data class Competitor
         }
     }
 
-    fun formattedSplitsRaceTime( ) : List<String> { //TODO: Cache it!!!
+    fun formattedSplitsRaceTime( ) : List<String> {
         return splits.map{ split_time ->  formattedRaceTime(split_time)}
     }
     fun formattedSplitsDayTime( ) : List<String> {
