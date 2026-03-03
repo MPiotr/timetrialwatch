@@ -52,7 +52,7 @@ fun CompetitorTimeTrialItem(item : Competitor, index : Int, autostart : Boolean,
     LaunchedEffect(item.startTime) {   if (start_time != item.startTime) start_time = item.startTime}
 
 
-    if(autostart && index == 0)
+    if(autostart && index == 0 &&  start_time != 0L)
     {
         Column(modifier = Modifier.fillMaxWidth().background(
             color = if(!item.started) MaterialTheme.colorScheme.error else startingGreen),
@@ -136,7 +136,7 @@ fun CompetitorTimeTrialItem(item : Competitor, index : Int, autostart : Boolean,
                         )
                     },
                     Modifier.wrapContentWidth().padding(8.dp),
-                    enabled = !autostart
+                    enabled = (!autostart) || start_time == 0L
                 )
                 {
                     val timeToStartString = item.timeBeforeStart(msnow, comp_start_time)

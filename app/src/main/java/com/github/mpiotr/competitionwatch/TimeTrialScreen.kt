@@ -89,6 +89,9 @@ fun TimeTrialScreen(viewModel: CompetitorViewModel, modifier: Modifier)
                 {
                     Text(stringResource(R.string.start_race))
                 }
+                Button( { viewModel.arrangeStartTimes()}, modifier = Modifier)
+                {  Text(stringResource(R.string.arrange_start_times))}
+
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
                     for((j,competitor) in startingOrder.withIndex())
                     {

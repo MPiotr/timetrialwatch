@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,7 +44,8 @@ import com.github.mpiotr.competitionwatch.dataset.Competitor
 
     Scaffold(modifier = modifier.fillMaxSize(),
         topBar = {
-            Row(Modifier.height(64.dp)
+            Row(Modifier
+                .height(64.dp)
                 .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.list_of_participants),
@@ -62,7 +64,10 @@ import com.github.mpiotr.competitionwatch.dataset.Competitor
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 userScrollEnabled = true,
-                modifier = Modifier.horizontalScroll(scroll_state).padding(innerPadding).weight(1.0f),
+                modifier = Modifier
+                    .horizontalScroll(scroll_state)
+                    .padding(innerPadding)
+                    .weight(1.0f),
             ) {
                 itemsIndexed(
                     items = competitors,

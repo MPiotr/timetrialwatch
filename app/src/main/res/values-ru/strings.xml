@@ -65,4 +65,5 @@
     <string name="auto_start_explanation">Если эта опция выбрана, то участники стартуют автоматически, по звуковому сигналу</string>
     <string name="clear_competition_data">Сборсить время участников</string>
     <string name="are_you_sure">Вы уверены?</string>
+    <string name="arrange_start_times">Заполнить стартовое время</string>
 </resources>

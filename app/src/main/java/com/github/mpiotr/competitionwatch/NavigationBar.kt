@@ -64,9 +64,6 @@ fun NavigationBar(modifier: Modifier = Modifier, application : Application, view
                     NavigationBarItem(
                         selected = selectedDestination == index,
                         onClick = {
-                            if(destination == Destinations.START) {
-                                viewModel.arrangeStartTimes()
-                            }
                             navController.navigate(route = destination.route)
                             selectedDestination = index
                         },

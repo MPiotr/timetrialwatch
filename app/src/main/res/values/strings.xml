@@ -65,4 +65,5 @@
     <string name="auto_start_explanation">If this box is checked participant start automatically, by start signal</string>
     <string name="clear_competition_data">Clear race data</string>
     <string name="are_you_sure">Are you sure?</string>
+    <string name="arrange_start_times">Arrange start times</string>
 </resources>
