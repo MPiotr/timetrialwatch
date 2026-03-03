@@ -71,8 +71,8 @@ fun GroupSelectorBox(selectedGroup : String, viewModel: CompetitorViewModel, onG
                             DropdownMenuItem(
                                 { Text(g.name, fontSize = 12.sp) },
                                 {
-                                    expanded = false;
-                                    onGroupSelected(g.name);
+                                    expanded = false
+                                    onGroupSelected(g.name)
                                 }
                             )
                         }

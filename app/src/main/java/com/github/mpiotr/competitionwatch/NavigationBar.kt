@@ -1,12 +1,14 @@
 package com.github.mpiotr.competitionwatch
 
 import android.app.Application
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Start
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
@@ -19,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 
 
@@ -73,7 +76,9 @@ fun NavigationBar(modifier: Modifier = Modifier, application : Application, view
                                 contentDescription = labels[destination.route]!!.contentDescription
                             )
                         },
-                        label = { Text(labels[destination.route]!!.label, textAlign = TextAlign.Center) }
+                        label = { Text(labels[destination.route]!!.label, textAlign = TextAlign.Center,
+                            autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = 12.sp, stepSize = 1.sp),
+                            maxLines = 1) }
                     )
                 }
             }
