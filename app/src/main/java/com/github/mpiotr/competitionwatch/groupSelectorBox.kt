@@ -2,6 +2,7 @@ package com.github.mpiotr.competitionwatch
 
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,7 +40,7 @@ fun GroupSelectorBox(selectedGroup : String, viewModel: CompetitorViewModel, onG
     val focusManager = LocalFocusManager.current
 
 
-    Column {
+    Column(modifier = Modifier.focusable(true)) {
         Text(stringResource(R.string.group), fontSize = 10.sp)
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -70,8 +71,8 @@ fun GroupSelectorBox(selectedGroup : String, viewModel: CompetitorViewModel, onG
                             DropdownMenuItem(
                                 { Text(g.name, fontSize = 12.sp) },
                                 {
-                                    expanded = false;
-                                    onGroupSelected(g.name);
+                                    expanded = false
+                                    onGroupSelected(g.name)
                                 }
                             )
                         }

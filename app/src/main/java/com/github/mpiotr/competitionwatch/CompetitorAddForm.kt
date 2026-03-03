@@ -97,7 +97,7 @@ fun CompetitorAddForm(item : Competitor, viewModel: CompetitorViewModel, context
 
         Row(verticalAlignment = Alignment.Bottom) {
             TextField(
-                bib.bib_number.toString(),
+                if(bib.bib_number != 0) bib.bib_number.toString() else "",
 
                 { num ->
                     if (num.length > 0) {

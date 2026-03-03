@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.github.mpiotr.competitionwatch.dataset.Competitor
 
 
@@ -63,7 +66,11 @@ fun CompetitorListItem(item : Competitor,
             modifier = Modifier.width(75.dp),
             textAlign = TextAlign.Center
         )
-        Text(item.group, modifier = Modifier.width(75.dp))
+        Text(item.group, modifier = Modifier.width(75.dp),
+            autoSize = TextAutoSize.StepBased(minFontSize =  MaterialTheme.typography.labelSmall.fontSize,
+                maxFontSize = MaterialTheme.typography.bodyLarge.fontSize, stepSize = 1.sp),
+            maxLines = 1
+        )
         Text(if (item.sex == 1) stringResource(R.string.M) else stringResource(R.string.W), modifier = Modifier.width(75.dp) )
     }
 }

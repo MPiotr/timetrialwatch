@@ -24,6 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import com.example.compose.onStartingGreen
+import com.example.compose.startingGreen
 import com.github.mpiotr.competitionwatch.dataset.Competitor
 
 @Composable
@@ -50,10 +52,10 @@ fun CompetitorTimeTrialItem(item : Competitor, index : Int, autostart : Boolean,
     LaunchedEffect(item.startTime) {   if (start_time != item.startTime) start_time = item.startTime}
 
 
-    if(autostart && index == 0)
+    if(autostart && index == 0 &&  start_time != 0L)
     {
         Column(modifier = Modifier.fillMaxWidth().background(
-            color = if(!item.started) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primaryFixed),
+            color = if(!item.started) MaterialTheme.colorScheme.error else startingGreen),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val timeToStartString = item.timeBeforeStart(msnow, comp_start_time)
@@ -73,7 +75,7 @@ fun CompetitorTimeTrialItem(item : Competitor, index : Int, autostart : Boolean,
                 )
             }
 
-            val textColor = if(!item.started) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onPrimaryFixed
+            val textColor = if(!item.started) MaterialTheme.colorScheme.onError else onStartingGreen
 
             Text(
                 name,
@@ -134,7 +136,7 @@ fun CompetitorTimeTrialItem(item : Competitor, index : Int, autostart : Boolean,
                         )
                     },
                     Modifier.wrapContentWidth().padding(8.dp),
-                    enabled = !autostart
+                    enabled = (!autostart) || start_time == 0L
                 )
                 {
                     val timeToStartString = item.timeBeforeStart(msnow, comp_start_time)

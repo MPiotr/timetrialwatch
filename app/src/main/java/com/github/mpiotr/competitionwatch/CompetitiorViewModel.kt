@@ -323,13 +323,12 @@ class CompetitorViewModel(application : Application,
                     _groupIndex[a.group]?.minus(_groupIndex[b.group] ?: 0) ?: 0
                 else if (a.sex != b.sex) -a.sex + b.sex
                 else a.bib.compareTo(b.bib)
-            }.filter({!it.started}).mapIndexed { index, competitor ->
+            }.mapIndexed { index, competitor ->
                 if (!competitor.started ) {
                         competitor.copy(startTime = index * 1000L * start_interval + start_offset*1000)
-
                 }
-                else competitor
-            }
+                else null
+            }.filterNotNull()
             dao.updateAll(arranged)
 
 

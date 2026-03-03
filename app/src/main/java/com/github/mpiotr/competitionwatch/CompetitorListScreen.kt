@@ -43,7 +43,8 @@ import com.github.mpiotr.competitionwatch.dataset.Competitor
 
     Scaffold(modifier = modifier.fillMaxSize(),
         topBar = {
-            Row(Modifier.height(64.dp)
+            Row(Modifier
+                .height(64.dp)
                 .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.list_of_participants),
@@ -62,7 +63,10 @@ import com.github.mpiotr.competitionwatch.dataset.Competitor
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 userScrollEnabled = true,
-                modifier = Modifier.horizontalScroll(scroll_state).padding(innerPadding).weight(1.0f),
+                modifier = Modifier
+                    .horizontalScroll(scroll_state)
+                    .padding(innerPadding)
+                    .weight(1.0f),
             ) {
                 itemsIndexed(
                     items = competitors,
