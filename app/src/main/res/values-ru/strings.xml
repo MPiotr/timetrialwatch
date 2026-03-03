@@ -61,4 +61,8 @@
     <string name="use_email_explanation">Почта используется для рассылки результатов участникам</string>
     <string name="play_start_sound_explanation">Старт всё равно в ручном режиме, по нажатию кнопки судьёй. Стартовый порядок также может быть произвольным. Он определяется последовательностью нажатия на \"старт\" для каждого участника</string>
     <string name="list_of_participants_short">Участники</string>
+    <string name="auto_start">Автоматический старт участников</string>
+    <string name="auto_start_explanation">Если эта опция выбрана, то участники стартуют автоматически, по звуковому сигналу</string>
+    <string name="clear_competition_data">Сборсить время участников</string>
+    <string name="are_you_sure">Вы уверены?</string>
 </resources>
